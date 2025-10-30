@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Teamflow">
         <activity
+<<<<<<< Updated upstream
             android:name=".page12d"
             android:exported="false" />
         <activity
@@ -28,6 +29,48 @@
             android:exported="false" />
         <activity
             android:name=".page11"
+=======
+            android:name=".task_list_all"
+            android:exported="false" />
+        <activity
+            android:name=".task_list_completed"
+            android:exported="false" />
+        <activity
+            android:name=".task_list"
+            android:exported="false" />
+        <activity
+            android:name=".task_detail"
+            android:exported="false" />
+        <activity
+            android:name=".add_edit_project"
+            android:exported="false" />
+        <activity
+            android:name=".project_detail"
+            android:exported="false" />
+        <activity
+            android:name=".home_page"
+            android:exported="false" />
+        <activity
+            android:name=".Success"
+            android:exported="false" />
+        <activity
+            android:name=".set_new_password"
+            android:exported="false" />
+        <activity
+            android:name=".OTP"
+            android:exported="false" />
+        <activity
+            android:name=".forgot_password"
+            android:exported="false" />
+        <activity
+            android:name=".Create_account"
+            android:exported="false" />
+        <activity
+            android:name=".Sign_in"
+            android:exported="false" />
+        <activity
+            android:name=".splash_screen"
+>>>>>>> Stashed changes
             android:exported="false" />
         <activity
             android:name=".page10"
