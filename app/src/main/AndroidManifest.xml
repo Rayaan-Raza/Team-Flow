@@ -12,7 +12,42 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Teamflow">
         <activity
-<<<<<<< Updated upstream
+            android:name=".Notifications_empty"
+            android:exported="false" />
+        <activity
+            android:name=".notifications_fill"
+            android:exported="false" />
+        <activity
+            android:name=".No_Internet_Connection"
+            android:exported="false" />
+        <activity
+            android:name=".emptystate_notifications"
+            android:exported="false" />
+        <activity
+            android:name=".emptystate_projectlist"
+            android:exported="false" />
+        <activity
+            android:name=".emptystate_taskcomplete"
+            android:exported="false" />
+        <activity
+            android:name=".profile_screen"
+            android:exported="false" />
+        <activity
+            android:name=".settings_profile"
+            android:exported="false" />
+        <activity
+            android:name=".settings_privacy"
+            android:exported="false" />
+        <activity
+            android:name=".settings_app"
+            android:exported="false" />
+        <activity
+            android:name=".settings_options"
+            android:exported="false" />
+        <activity
+            android:name=".settings_main"
+            android:exported="false" />
+        <activity
             android:name=".page12d"
             android:exported="false" />
         <activity
@@ -27,9 +62,8 @@
         <activity
             android:name=".page12b"
             android:exported="false" />
+        <activity android:name=".page11" />
         <activity
-            android:name=".page11"
-=======
             android:name=".task_list_all"
             android:exported="false" />
         <activity
@@ -70,7 +104,6 @@
             android:exported="false" />
         <activity
             android:name=".splash_screen"
->>>>>>> Stashed changes
             android:exported="false" />
         <activity
             android:name=".page10"
