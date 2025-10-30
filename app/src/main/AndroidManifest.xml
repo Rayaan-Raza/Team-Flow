@@ -12,6 +12,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Teamflow">
         <activity
+            android:name=".page12d"
+            android:exported="false" />
+        <activity
+            android:name=".page09b"
+            android:exported="false" />
+        <activity
+            android:name=".page12a"
+            android:exported="false" />
+        <activity
+            android:name=".page12c"
+            android:exported="false" />
+        <activity
+            android:name=".page12b"
+            android:exported="false" />
+        <activity
+            android:name=".page11"
+            android:exported="false" />
+        <activity
             android:name=".page10"
             android:exported="false" />
         <activity
