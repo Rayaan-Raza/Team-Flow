@@ -1,7 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#FFFFFF"
+    tools:context=".OTP">
 
     <!-- Top row with back button -->
     <LinearLayout
@@ -14,20 +16,19 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_marginTop="20dp"
             android:id="@+id/btnBack"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:src="@drawable/back_arrow"
-            />
+            android:layout_marginTop="20dp"
+            android:src="@drawable/back_arrow" />
     </LinearLayout>
 
     <!-- Content -->
     <RelativeLayout
-        android:layout_marginTop="50dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/topRow">
+        android:layout_below="@id/topRow"
+        android:layout_marginTop="50dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -55,9 +56,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="We sent a reset link to "
+                android:text="We sent a password reset link to"
                 android:textColor="#9CA3AF"
-                android:textSize="13sp"/>
+                android:textSize="13sp" />
 
             <!-- Email highlight -->
             <TextView
@@ -67,15 +68,25 @@
                 android:text="xyz@gmail.com"
                 android:textColor="#111827"
                 android:textStyle="bold"
-                android:textSize="13sp"/>
+                android:textSize="13sp" />
 
+            <!-- Extra helper text -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Enter 5 digit code that mentioned in the email"
+                android:layout_marginTop="4dp"
+                android:text="Open that email, reset your password using the link, then come back here."
                 android:textColor="#9CA3AF"
-                android:textSize="13sp"
-                android:layout_marginTop="4dp"/>
+                android:textSize="13sp" />
+
+            <!-- Code info -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Optionally enter the 5 digit code mentioned in the email below."
+                android:textColor="#9CA3AF"
+                android:textSize="13sp" />
 
             <!-- OTP boxes -->
             <LinearLayout
@@ -95,7 +106,7 @@
                     android:inputType="number"
                     android:maxLength="1"
                     android:textSize="18sp"
-                    android:background="@drawable/bg_otp_box"/>
+                    android:background="@drawable/bg_otp_box" />
 
                 <EditText
                     android:id="@+id/etCode2"
@@ -106,7 +117,7 @@
                     android:inputType="number"
                     android:maxLength="1"
                     android:textSize="18sp"
-                    android:background="@drawable/bg_otp_box"/>
+                    android:background="@drawable/bg_otp_box" />
 
                 <EditText
                     android:id="@+id/etCode3"
@@ -117,7 +128,7 @@
                     android:inputType="number"
                     android:maxLength="1"
                     android:textSize="18sp"
-                    android:background="@drawable/bg_otp_box"/>
+                    android:background="@drawable/bg_otp_box" />
 
                 <EditText
                     android:id="@+id/etCode4"
@@ -128,7 +139,7 @@
                     android:inputType="number"
                     android:maxLength="1"
                     android:textSize="18sp"
-                    android:background="@drawable/bg_otp_box"/>
+                    android:background="@drawable/bg_otp_box" />
 
                 <EditText
                     android:id="@+id/etCode5"
@@ -139,7 +150,7 @@
                     android:inputType="number"
                     android:maxLength="1"
                     android:textSize="18sp"
-                    android:background="@drawable/bg_otp_box"/>
+                    android:background="@drawable/bg_otp_box" />
             </LinearLayout>
 
             <!-- Verify button -->
@@ -148,12 +159,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="18dp"
-                android:text="Verify Code"
+                android:text="Verify &amp; Go to Sign In"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
                 android:background="@drawable/bg_button_primary"
-                android:backgroundTint="@null"/>
+                android:backgroundTint="@null" />
 
             <!-- Resend email -->
             <LinearLayout
@@ -168,7 +179,7 @@
                     android:layout_height="wrap_content"
                     android:text="Haven’t got the email yet? "
                     android:textColor="#6B7280"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/tvResend"
@@ -177,7 +188,7 @@
                     android:text="Resend email"
                     android:textColor="#2F6CE5"
                     android:textSize="12sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>

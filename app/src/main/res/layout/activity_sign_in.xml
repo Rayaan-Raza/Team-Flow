@@ -1,7 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="#FFFFFF"
+    tools:context=".Sign_in">
 
     <!-- Blue arc background (BOTTOM) -->
     <ImageView
@@ -127,21 +129,18 @@
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:hint="Email"
-            android:drawableStart="@drawable/ic_placeholder_email"
             android:drawablePadding="10dp"
             android:inputType="textEmailAddress"
             android:background="@drawable/bg_edittext"
             android:paddingStart="12dp"
             android:text="xyz@gmail.com" />
 
-        <!-- Password -->
         <EditText
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:layout_marginTop="12dp"
             android:hint="Password"
-            android:drawableStart="@drawable/ic_placeholder_lock"
             android:drawablePadding="10dp"
             android:inputType="textPassword"
             android:background="@drawable/bg_edittext"

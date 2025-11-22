@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "821552096000",
+    "project_id": "team-flow-1f54f",
+    "storage_bucket": "team-flow-1f54f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:821552096000:android:4795f7a05498b4512209e5",
+        "android_client_info": {
+          "package_name": "com.teamflow.art"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-ad8jeHVYlDRavVFaLC2P8cwMBZ2yCb8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

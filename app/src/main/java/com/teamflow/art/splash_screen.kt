@@ -1,20 +1,25 @@
 package com.teamflow.art
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 class splash_screen : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_splash_screen)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+
+        // Optional: hide the action bar for a cleaner splash
+        supportActionBar?.hide()
+
+        // Delay for 2 seconds then go to LoginActivity
+        Handler(Looper.getMainLooper()).postDelayed({
+            val intent = Intent(this, Sign_in::class.java)
+            startActivity(intent)
+            finish()
+        }, 5000)
     }
 }
