@@ -14,5 +14,9 @@ data class Task(
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
 
-    val subTaskIds: Map<String, Boolean>? = null
+    val subTaskIds: Map<String, Boolean>? = null,
+
+    // NEW
+    val commentsCount: Int? = 0,
+    val attachmentsCount: Int? = 0
 )
