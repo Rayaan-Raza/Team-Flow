@@ -17,8 +17,7 @@ class TasksAdapter(
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvDescription: TextView = itemView.findViewById(R.id.tvDescription)
         val tvProgress: TextView = itemView.findViewById(R.id.tvProgress)
-        val tvAttachments: TextView = itemView.findViewById(R.id.tvAttachments)
-        val tvComments: TextView = itemView.findViewById(R.id.tvComments)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -46,13 +45,6 @@ class TasksAdapter(
         val attachmentsCount = task.attachmentsCount ?: 0
         val commentsCount = task.commentsCount ?: 0
 
-        holder.tvAttachments.text = " $attachmentsCount Attachment" +
-                if (attachmentsCount != 1) "s" else ""
-        holder.tvComments.text = " $commentsCount Comment" +
-                if (commentsCount != 1) "s" else ""
-
-        // If you want click → open Task Details later:
-        // holder.cardRoot.setOnClickListener { ... }
     }
 
     fun updateTasks(newTasks: List<Task>) {

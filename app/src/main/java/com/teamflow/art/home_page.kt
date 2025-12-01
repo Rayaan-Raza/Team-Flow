@@ -10,12 +10,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.FirebaseDatabase
 
 class home_page : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
-    private lateinit var dbRef: DatabaseReference
+    private val dbRef = FirebaseDatabase.getInstance().reference
 
     private lateinit var tvHello: TextView
     private lateinit var tvUpcomingCount: TextView
@@ -29,64 +29,49 @@ class home_page : AppCompatActivity() {
     private lateinit var navInbox: LinearLayout
     private lateinit var navProfile: LinearLayout
 
-    private lateinit var tasksAdapter: TasksAdapter
-    private val taskList = mutableListOf<Task>()
+    private lateinit var projectsAdapter: ProjectsAdapter
+    private val projectList = mutableListOf<Project>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_page)
 
         auth = FirebaseAuth.getInstance()
-        dbRef = FirebaseDatabase.getInstance().reference
 
         tvHello = findViewById(R.id.tvHello)
         tvUpcomingCount = findViewById(R.id.tvUpcomingCount)
         btnNewTask = findViewById(R.id.btnNewTask)
         rvTasks = findViewById(R.id.rvTasks)
 
-        // Bottom navigation bindings
         navHome = findViewById(R.id.navHome)
         navProjects = findViewById(R.id.navProjects)
         navCalendar = findViewById(R.id.navCalendar)
         navInbox = findViewById(R.id.navInbox)
         navProfile = findViewById(R.id.navProfile)
 
-        // RecyclerView Setup
         rvTasks.layoutManager = LinearLayoutManager(this)
-        tasksAdapter = TasksAdapter(taskList)
-        rvTasks.adapter = tasksAdapter
+        projectsAdapter = ProjectsAdapter(projectList) { project ->
+            val pid = project.id ?: return@ProjectsAdapter
+            // later: open project_detail
+            Toast.makeText(this, "Open project: $pid", Toast.LENGTH_SHORT).show()
+        }
+        rvTasks.adapter = projectsAdapter
 
-        // Load data
         loadUserName()
-        loadUpcomingTasks()
+        loadAssignedProjects()
 
-        // New task button
         btnNewTask.setOnClickListener {
-            Toast.makeText(this, "New Task clicked", Toast.LENGTH_SHORT).show()
+            // For now: create project
+            startActivity(Intent(this, add_edit_project::class.java))
         }
 
-        // --- BOTTOM NAV CLICKS ---
-        navHome.setOnClickListener {
-            // Already here
-            Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show()
-        }
-
+        navHome.setOnClickListener { }
         navProjects.setOnClickListener {
             Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
-            // startActivity(Intent(this, ProjectsActivity::class.java))
         }
-
-        navCalendar.setOnClickListener {
-            Toast.makeText(this, "Calendar", Toast.LENGTH_SHORT).show()
-        }
-
-        navInbox.setOnClickListener {
-            Toast.makeText(this, "Inbox", Toast.LENGTH_SHORT).show()
-        }
-
-        navProfile.setOnClickListener {
-            Toast.makeText(this, "Profile", Toast.LENGTH_SHORT).show()
-        }
+        navCalendar.setOnClickListener { Toast.makeText(this, "Calendar", Toast.LENGTH_SHORT).show() }
+        navInbox.setOnClickListener { Toast.makeText(this, "Inbox", Toast.LENGTH_SHORT).show() }
+        navProfile.setOnClickListener { Toast.makeText(this, "Profile", Toast.LENGTH_SHORT).show() }
     }
 
     override fun onStart() {
@@ -100,10 +85,9 @@ class home_page : AppCompatActivity() {
 
     private fun loadUserName() {
         val uid = auth.currentUser?.uid ?: return
-
         dbRef.child("users").child(uid).get()
-            .addOnSuccessListener { snapshot ->
-                val name = snapshot.child("name").getValue(String::class.java)
+            .addOnSuccessListener { snap ->
+                val name = snap.child("name").getValue(String::class.java)
                 tvHello.text = if (!name.isNullOrEmpty()) "Hi, $name" else "Hi,"
             }
             .addOnFailureListener {
@@ -111,42 +95,42 @@ class home_page : AppCompatActivity() {
             }
     }
 
-    private fun loadUpcomingTasks() {
+    private fun loadAssignedProjects() {
         val uid = auth.currentUser?.uid ?: return
 
-        dbRef.child("tasks").get()
-            .addOnSuccessListener { snapshot ->
-                val allTasks = mutableListOf<Task>()
+        dbRef.child("userProjects").child(uid).get()
+            .addOnSuccessListener { assignedSnap ->
+                val ids = assignedSnap.children.mapNotNull { it.key }
+                if (ids.isEmpty()) {
+                    projectsAdapter.setProjects(emptyList())
+                    tvUpcomingCount.text = "0"
+                    return@addOnSuccessListener
+                }
 
-                for (projectSnap in snapshot.children) {
-                    val projectId = projectSnap.key ?: continue
+                val results = mutableListOf<Project>()
+                var remaining = ids.size
 
-                    for (taskSnap in projectSnap.children) {
-                        val task = taskSnap.getValue(Task::class.java)
-                        if (task != null) {
-                            val fixedTask = task.copy(
-                                id = task.id ?: taskSnap.key,
-                                projectId = task.projectId ?: projectId
-                            )
-                            allTasks.add(fixedTask)
+                for (pid in ids) {
+                    dbRef.child("projects").child(pid).get()
+                        .addOnSuccessListener { pSnap ->
+                            val p = pSnap.getValue(Project::class.java)
+                            if (p != null && (p.status ?: "in_progress") == "in_progress") {
+                                results.add(p.copy(id = p.id ?: pid))
+                            }
                         }
-                    }
-                }
-
-                val upcoming = allTasks.filter { t ->
-                    (t.assigneeUid == uid || t.assigneeUid.isNullOrEmpty()) &&
-                            t.isCompleted != true
-                }
-
-                tasksAdapter.updateTasks(upcoming)
-                tvUpcomingCount.text = upcoming.size.toString()
-
-                if (upcoming.isEmpty()) {
-                    Toast.makeText(this, "No upcoming tasks.", Toast.LENGTH_SHORT).show()
+                        .addOnCompleteListener {
+                            remaining--
+                            if (remaining == 0) {
+                                // Sort newest first (optional)
+                                results.sortByDescending { it.createdAt ?: 0L }
+                                projectsAdapter.setProjects(results)
+                                tvUpcomingCount.text = results.size.toString()
+                            }
+                        }
                 }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed to load tasks", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to load projects", Toast.LENGTH_SHORT).show()
             }
     }
 }

@@ -2,20 +2,14 @@ package com.teamflow.art
 
 data class Project(
     val id: String? = null,
-    val ownerUid: String? = null,
-
-    val title: String? = null,
+    val name: String? = null,
     val description: String? = null,
-    val category: String? = null,
-    val status: String? = null,
-    val priority: String? = null,
-
-    val dueDate: String? = null,
+    val createdBy: String? = null,
+    val status: String? = "in_progress",  // backend only
     val createdAt: Long? = null,
     val updatedAt: Long? = null,
+    val dueAt: Long? = null,
 
-    val attachmentsCount: Int? = 0,
-    val commentsCount: Int? = 0,
-    val tasksCompleted: Int? = 0,
-    val tasksTotal: Int? = 0
+    val tasksTotal: Int? = 1,
+    val tasksDone: Int? = 0
 )

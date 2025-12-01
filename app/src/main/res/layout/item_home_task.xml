@@ -17,7 +17,7 @@
         android:paddingEnd="10dp"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:text="User Interface"
+        android:text="Project"
         android:textColor="#6B5AE6"
         android:textSize="11sp"
         android:background="@drawable/bg_pill_light" />
@@ -43,7 +43,7 @@
         android:textColor="#6B7280"
         android:textSize="12sp" />
 
-    <!-- Progress + avatars + invite -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -92,94 +92,11 @@
 
         </LinearLayout>
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
 
-        <TextView
-            android:id="@+id/tvInvite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:text="Invite"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:background="@drawable/bg_chip_primary" />
+
+
     </LinearLayout>
 
-    <!-- Attachments & comments -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
 
-        <!-- Attachment box -->
-        <RelativeLayout
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_chip_outline"
-            android:layout_marginEnd="5dp">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/paperclip"
-                    android:layout_gravity="center_vertical" />
-
-                <TextView
-                    android:id="@+id/tvAttachments"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" 0 Attachment"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </RelativeLayout>
-
-        <!-- Comment box -->
-        <RelativeLayout
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_chip_outline"
-            android:layout_marginStart="5dp">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/comments"
-                    android:layout_gravity="center_vertical" />
-
-                <TextView
-                    android:id="@+id/tvComments"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" 0 Comment"
-                    android:textColor="#6B7280"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </RelativeLayout>
-    </LinearLayout>
 
 </LinearLayout>
