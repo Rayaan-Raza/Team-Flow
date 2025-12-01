@@ -52,9 +52,11 @@ class home_page : AppCompatActivity() {
         rvTasks.layoutManager = LinearLayoutManager(this)
         projectsAdapter = ProjectsAdapter(projectList) { project ->
             val pid = project.id ?: return@ProjectsAdapter
-            // later: open project_detail
-            Toast.makeText(this, "Open project: $pid", Toast.LENGTH_SHORT).show()
+            val i = Intent(this, project_detail::class.java)
+            i.putExtra("projectId", pid)
+            startActivity(i)
         }
+
         rvTasks.adapter = projectsAdapter
 
         loadUserName()

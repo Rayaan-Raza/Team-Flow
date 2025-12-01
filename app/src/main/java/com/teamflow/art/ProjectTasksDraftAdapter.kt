@@ -14,6 +14,7 @@ class ProjectTasksDraftAdapter(
 ) : RecyclerView.Adapter<ProjectTasksDraftAdapter.VH>() {
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val root: View = itemView
         val ivStatus: ImageView = itemView.findViewById(R.id.ivStatus)
         val etTitle: EditText = itemView.findViewById(R.id.etTaskTitle)
         val etHours: EditText = itemView.findViewById(R.id.etHours)
@@ -30,15 +31,25 @@ class ProjectTasksDraftAdapter(
 
     override fun getItemCount(): Int = tasks.size
 
+    fun setTasks(list: List<TaskDraft>) {
+        tasks.clear()
+        tasks.addAll(list)
+        if (tasks.isEmpty()) tasks.add(TaskDraft())
+        notifyDataSetChanged()
+    }
+
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = tasks[position]
 
-        // Prevent duplicate watchers
+        // remove old watchers (RecyclerView reuses views)
         holder.titleWatcher?.let { holder.etTitle.removeTextChangedListener(it) }
         holder.hoursWatcher?.let { holder.etHours.removeTextChangedListener(it) }
 
         holder.etTitle.setText(item.title)
-        holder.etHours.setText(item.hours?.toString() ?: "")
+
+        // hours: show empty string if 0 or null
+        val hoursValue = item.hours ?: 0
+        holder.etHours.setText(if (hoursValue == 0) "" else hoursValue.toString())
 
         holder.titleWatcher = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -56,7 +67,7 @@ class ProjectTasksDraftAdapter(
                 val pos = holder.bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
                     val v = s?.toString()?.trim()
-                    tasks[pos].hours = v?.toIntOrNull()
+                    tasks[pos].hours = v?.toIntOrNull() ?: 0   // SAFE (no crash)
                 }
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -65,10 +76,26 @@ class ProjectTasksDraftAdapter(
 
         holder.etTitle.addTextChangedListener(holder.titleWatcher)
         holder.etHours.addTextChangedListener(holder.hoursWatcher)
+
+        // LONG PRESS DELETE
+        holder.root.setOnLongClickListener {
+            val pos = holder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION) {
+                tasks.removeAt(pos)
+                notifyItemRemoved(pos)
+
+                // keep at least one row
+                if (tasks.isEmpty()) {
+                    tasks.add(TaskDraft())
+                    notifyItemInserted(0)
+                }
+            }
+            true
+        }
     }
 
     fun addEmptyTask() {
-        tasks.add(TaskDraft())
+        tasks.add(TaskDraft()) // id=null => treated as NEW in updateProject()
         notifyItemInserted(tasks.size - 1)
     }
 

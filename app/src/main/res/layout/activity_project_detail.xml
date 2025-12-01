@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#2F6CE5"
+    android:id="@+id/main"
     tools:context=".project_detail">
 
     <!-- Top bar -->
@@ -94,6 +95,7 @@
             </LinearLayout>
 
             <!-- Assigned to -->
+            <!-- Assigned to -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -110,79 +112,26 @@
                     android:textStyle="bold"
                     android:textSize="13sp" />
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <!-- Avatar 1 -->
-                    <ImageView
-                        android:id="@+id/avatar1"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_marginStart="0dp"
-                        android:layout_alignParentStart="true"
-                        android:src="@drawable/pfp1"
-                        android:background="@drawable/bg_circle_mask"
-                        android:scaleType="centerCrop" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvMembers"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:overScrollMode="never"
+                        android:nestedScrollingEnabled="false" />
 
-                    <!-- Avatar 2 -->
-                    <ImageView
-                        android:id="@+id/avatar2"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/avatar1"
-                        android:layout_marginStart="20dp"
-                        android:src="@drawable/pfp2"
-                        android:background="@drawable/bg_circle_mask"
-                        android:scaleType="centerCrop" />
-
-                    <!-- Avatar 3 -->
-                    <ImageView
-                        android:id="@+id/avatar3"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/avatar2"
-                        android:layout_marginStart="20dp"
-                        android:src="@drawable/pfp3"
-                        android:background="@drawable/bg_circle_mask"
-                        android:scaleType="centerCrop" />
-
-                    <!-- Avatar 4 -->
-                    <ImageView
-                        android:id="@+id/avatar4"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/avatar3"
-                        android:layout_marginStart="20dp"
-                        android:src="@drawable/pfp4"
-                        android:background="@drawable/bg_circle_mask"
-                        android:scaleType="centerCrop" />
-
-                    <!-- Avatar 5 -->
-                    <ImageView
-                        android:id="@+id/avatar5"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/avatar4"
-                        android:layout_marginStart="20dp"
-                        android:src="@drawable/pfp5"
-                        android:background="@drawable/bg_circle_mask"
-                        android:scaleType="centerCrop" />
-
-                    <!-- Plus button -->
                     <RelativeLayout
                         android:id="@+id/addAvatar"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
-                        android:layout_centerVertical="true"
-                        android:layout_toEndOf="@id/avatar5"
-                        android:layout_marginStart="20dp"
+                        android:layout_marginStart="12dp"
                         android:background="@drawable/bg_circle_stroke">
 
                         <ImageView
@@ -192,9 +141,11 @@
                             android:src="@drawable/plus"
                             app:tint="#2F6CE5" />
                     </RelativeLayout>
-                </RelativeLayout>
+
+                </LinearLayout>
             </LinearLayout>
 
+            <!-- Task list card -->
             <!-- Task list card -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -212,272 +163,12 @@
                     android:textStyle="bold"
                     android:textSize="13sp" />
 
-                <!-- item 1 -->
-                <RelativeLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvProjectTasks"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="6dp">
-
-                    <ImageView
-                        android:id="@+id/chk1"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/circle_check"
-                        android:src="@drawable/tick"
-                        android:padding="6dp"
-
-                      />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/chk1"
-                        android:layout_marginStart="10dp"
-                        android:layout_centerVertical="true"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="Create Design System"
-                            android:textColor="#111827"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag"
-                               />
-
-                            <TextView
-                                android:text=" 25 hr"
-                                android:textColor="#9CA3AF"
-                                android:textSize="11sp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- right avatars -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:orientation="horizontal">
-
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:src="@drawable/pfp1" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp2" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp3" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <!-- item 2 -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="2dp">
-
-                    <ImageView
-                        android:id="@+id/chk2"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:background="@drawable/circle_check"
-                        android:src="@drawable/tick"
-                        android:padding="6dp"
-                      />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/chk2"
-                        android:layout_marginStart="10dp"
-                        android:layout_centerVertical="true"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="Create Wireframe"
-                            android:textColor="#111827"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag"
-                                />
-
-                            <TextView
-                                android:text=" 18 hr"
-                                android:textColor="#9CA3AF"
-                                android:textSize="11sp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:orientation="horizontal">
-
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:src="@drawable/pfp4" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp5" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp2" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <!-- item 3 -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="2dp">
-
-                    <ImageView
-                        android:id="@+id/radio3"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:src="@drawable/bg_circle_mask"
-                        />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/radio3"
-                        android:layout_marginStart="10dp"
-                        android:layout_centerVertical="true"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="Landing Page Design"
-                            android:textColor="#111827"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag"
-                               />
-
-                            <TextView
-                                android:text=" 8 hr"
-                                android:textColor="#9CA3AF"
-                                android:textSize="11sp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                        android:layout_alignParentEnd="true" android:layout_centerVertical="true"
-                        android:src="@drawable/pfp3" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                </RelativeLayout>
-
-                <!-- item 4 -->
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="2dp">
-
-                    <ImageView
-                        android:id="@+id/radio4"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:src="@drawable/bg_circle_mask"
-                        />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/radio4"
-                        android:layout_marginStart="10dp"
-                        android:layout_centerVertical="true"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:text="Mobile Screen Design"
-                            android:textColor="#111827"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag"
-                               />
-
-                            <TextView
-                                android:text=" 40 hr"
-                                android:textColor="#9CA3AF"
-                                android:textSize="11sp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:orientation="horizontal">
-
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:src="@drawable/pfp1" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp4" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                        <ImageView android:layout_width="24dp" android:layout_height="24dp"
-                            android:layout_marginStart="-8dp" android:src="@drawable/pfp5" android:background="@drawable/bg_circle_mask" android:scaleType="centerCrop"/>
-                    </LinearLayout>
-                </RelativeLayout>
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -519,7 +210,7 @@
             android:gravity="center"
             android:orientation="vertical">
             <ImageView android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/project"
-                android:tint="@color/black"/>
+                app:tint="@color/black" />
         </LinearLayout>
 
         <LinearLayout
