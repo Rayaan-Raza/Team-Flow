@@ -40,48 +40,31 @@ class OTP : AppCompatActivity() {
         etCode4 = findViewById(R.id.etCode4)
         etCode5 = findViewById(R.id.etCode5)
 
-        // Get email from previous screen
         email = intent.getStringExtra("email")
-        tvEmail.text = email ?: "your email"
+        tvEmail.text = email ?: ""
 
-        btnBack.setOnClickListener {
-            finish()
-        }
+        btnBack.setOnClickListener { finish() }
 
-        btnVerify.setOnClickListener {
-            verifyCodeAndContinue()
-        }
+        btnVerify.setOnClickListener { continueToSignIn() }
 
-        tvResend.setOnClickListener {
-            resendResetEmail()
-        }
+        tvResend.setOnClickListener { resendResetEmail() }
     }
 
-    private fun verifyCodeAndContinue() {
-        // This is mostly UI / UX, not real Firebase OTP
-        val code = listOf(
-            etCode1.text.toString(),
-            etCode2.text.toString(),
-            etCode3.text.toString(),
-            etCode4.text.toString(),
-            etCode5.text.toString()
-        ).joinToString("")
+    // NOTE: Firebase email reset has no OTP to verify. So Verify just continues.
+    private fun continueToSignIn() {
+        // If you still want to "require" 5 digits, keep your old check.
+        // But it's fake OTP, so best UX is not blocking users.
 
-        if (code.length != 5) {
-            Toast.makeText(this, "Please enter the 5-digit code", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // We can't actually verify this code via Firebase email-reset
-        // So we treat this as a confirmation step AFTER user used email link.
         Toast.makeText(
             this,
-            "If you have reset your password using the email link, you can now sign in.",
+            "If you reset your password using the email link, you can now sign in.",
             Toast.LENGTH_LONG
         ).show()
 
-        // Go back to login
-        startActivity(Intent(this, Sign_in::class.java))
+        val intent = Intent(this, Sign_in::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
         finish()
     }
 
@@ -96,14 +79,9 @@ class OTP : AppCompatActivity() {
         auth.sendPasswordResetEmail(mail)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(
-                        this,
-                        "Reset email resent to $mail",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this, "Reset email resent to $mail", Toast.LENGTH_LONG).show()
                 } else {
-                    val msg = task.exception?.localizedMessage
-                        ?: "Failed to resend email. Try again."
+                    val msg = task.exception?.localizedMessage ?: "Failed to resend email. Try again."
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
                 }
             }

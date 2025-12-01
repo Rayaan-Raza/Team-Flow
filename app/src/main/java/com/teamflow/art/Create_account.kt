@@ -27,7 +27,6 @@ class Create_account : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        // Initialize views
         etName = findViewById(R.id.etName)
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
@@ -38,6 +37,7 @@ class Create_account : AppCompatActivity() {
         tvSignIn = findViewById(R.id.tvSignIn)
 
         btnBack.setOnClickListener { finish() }
+
         tvSignIn.setOnClickListener {
             startActivity(Intent(this, Sign_in::class.java))
             finish()
@@ -51,8 +51,6 @@ class Create_account : AppCompatActivity() {
         val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString().trim()
         val confirmPassword = etConfirm.text.toString().trim()
-
-        // === VALIDATION ===
 
         if (name.isEmpty()) {
             etName.error = "Name required"
@@ -101,8 +99,6 @@ class Create_account : AppCompatActivity() {
             return
         }
 
-        // === CREATE ACCOUNT ===
-
         btnSignUp.isEnabled = false
         btnSignUp.text = "Creating..."
 
@@ -111,38 +107,39 @@ class Create_account : AppCompatActivity() {
                 btnSignUp.isEnabled = true
                 btnSignUp.text = "SIGN UP"
 
-                if (task.isSuccessful) {
-                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
-
-                    // Build user node
-                    val user = mapOf(
-                        "id" to uid,
-                        "name" to name,
-                        "email" to email,
-                        "photoUrl" to null,
-                        "createdAt" to System.currentTimeMillis()
-                    )
-
-                    // Write user into Realtime DB
-                    FirebaseDatabase.getInstance().reference
-                        .child("users")
-                        .child(uid)
-                        .setValue(user)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-
-                            // Navigate to SignIn or Home directly:
-                            startActivity(Intent(this, home_page::class.java))
-                            finish()
-                        }
-                        .addOnFailureListener {
-                            Toast.makeText(this, "Failed to save user data", Toast.LENGTH_LONG).show()
-                        }
-
-                } else {
-                    val msg = task.exception?.localizedMessage ?: "Sign up failed"
-                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                if (!task.isSuccessful) {
+                    Toast.makeText(this, task.exception?.localizedMessage ?: "Sign up failed", Toast.LENGTH_LONG).show()
+                    return@addOnCompleteListener
                 }
+
+                val uid = auth.currentUser?.uid
+                if (uid == null) {
+                    Toast.makeText(this, "Account created but UID missing.", Toast.LENGTH_LONG).show()
+                    auth.signOut()
+                    return@addOnCompleteListener
+                }
+
+                val user = mapOf(
+                    "id" to uid,
+                    "name" to name,
+                    "email" to email,
+                    "photoUrl" to null,
+                    "createdAt" to System.currentTimeMillis()
+                )
+
+                FirebaseDatabase.getInstance().reference
+                    .child("users")
+                    .child(uid)
+                    .setValue(user)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, home_page::class.java))
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Failed to save user data. Please try again.", Toast.LENGTH_LONG).show()
+                        auth.signOut()
+                    }
             }
     }
 }

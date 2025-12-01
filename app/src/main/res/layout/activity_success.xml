@@ -3,6 +3,7 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#FFFFFF"
+    android:id="@+id/main"
     tools:context=".Success">
 
     <!-- Centered content block -->

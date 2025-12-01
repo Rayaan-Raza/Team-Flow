@@ -24,13 +24,9 @@ class forgot_password : AppCompatActivity() {
         btnReset = findViewById(R.id.btnReset)
         btnBack = findViewById(R.id.btnBack)
 
-        btnBack.setOnClickListener {
-            finish() // go back to Sign_in
-        }
+        btnBack.setOnClickListener { finish() }
 
-        btnReset.setOnClickListener {
-            sendResetEmail()
-        }
+        btnReset.setOnClickListener { sendResetEmail() }
     }
 
     private fun sendResetEmail() {
@@ -59,16 +55,14 @@ class forgot_password : AppCompatActivity() {
                 btnReset.text = "Reset Password"
 
                 if (task.isSuccessful) {
-                    Toast.makeText(
-                        this,
-                        "Reset link sent to $email",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this, "Reset link sent to $email", Toast.LENGTH_LONG).show()
 
-                    // Go to OTP-like screen to show message & email
-                    val intent = Intent(this, OTP::class.java)
-                    intent.putExtra("email", email)
+                    val intent = Intent(this, OTP::class.java).apply {
+                        putExtra("email", email)
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
                     startActivity(intent)
+                    finish() // <-- prevents going back to forgot_password
 
                 } else {
                     val msg = task.exception?.localizedMessage

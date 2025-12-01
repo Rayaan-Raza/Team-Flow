@@ -8,6 +8,7 @@
 
     <!-- Top row: back + logo -->
     <LinearLayout
+        android:layout_marginTop="15dp"
         android:id="@+id/topRow"
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -38,6 +39,7 @@
 
     <!-- Content -->
     <ScrollView
+        android:layout_marginTop="20dp"
         android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -186,70 +188,9 @@
 
 
 
-            <!-- OR divider -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center">
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#E5E7EB"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:text="or sign up with"
-                    android:textColor="#9CA3AF"
-                    android:textSize="12sp"/>
 
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="#E5E7EB"/>
-            </LinearLayout>
-
-            <!-- Google button (dark) -->
-            <RelativeLayout
-                android:id="@+id/btnGoogle"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_button_dark"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <!-- Center text -->
-                <TextView
-                    android:id="@+id/tvGoogle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Continue with Google"
-                    android:textColor="#FFFFFF"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:layout_centerInParent="true" />
-
-                <!-- Google icon on the left side of text -->
-                <ImageView
-                    android:id="@+id/imgGoogle"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:src="@drawable/google"
-                    android:layout_centerVertical="true"
-                    android:layout_toStartOf="@id/tvGoogle"
-                    android:layout_marginEnd="10dp"
-
-                    />
-
-            </RelativeLayout>
 
 
             <!-- Already have an account -->

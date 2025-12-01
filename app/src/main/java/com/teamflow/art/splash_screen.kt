@@ -5,21 +5,30 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 
 class splash_screen : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
-
-        // Optional: hide the action bar for a cleaner splash
         supportActionBar?.hide()
 
-        // Delay for 2 seconds then go to LoginActivity
+        val auth = FirebaseAuth.getInstance()
+
+        // Keep 5 seconds as you requested
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, Sign_in::class.java)
-            startActivity(intent)
+
+            val next = if (auth.currentUser != null) {
+                Intent(this, home_page::class.java)
+            } else {
+                Intent(this, Create_account::class.java)
+            }
+
+            next.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(next)
             finish()
+
         }, 5000)
     }
 }

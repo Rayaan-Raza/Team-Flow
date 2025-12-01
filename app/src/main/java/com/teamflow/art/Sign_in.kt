@@ -33,29 +33,24 @@ class Sign_in : AppCompatActivity() {
         tvSignup = findViewById(R.id.tvSignup)
         tvForgot = findViewById(R.id.tvForgot)
 
-        // Load remembered credentials
+        // Load remembered credentials (only if remember == true)
         loadRememberedUser()
 
-        btnLogin.setOnClickListener {
-            loginUser()
-        }
+        btnLogin.setOnClickListener { loginUser() }
 
         tvSignup.setOnClickListener {
-            val intent = Intent(this, Create_account::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, Create_account::class.java))
         }
 
         tvForgot.setOnClickListener {
-            val intent = Intent(this, forgot_password::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, forgot_password::class.java))
         }
     }
 
     override fun onStart() {
         super.onStart()
-        // Edge case: if already logged in, don’t force user to sign in again
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
+        // If already logged in, go home
+        if (auth.currentUser != null) {
             goToHome()
         }
     }
@@ -64,7 +59,6 @@ class Sign_in : AppCompatActivity() {
         val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString().trim()
 
-        // === Validation with toasts ===
         if (email.isEmpty()) {
             etEmail.error = "Email required"
             etEmail.requestFocus()
@@ -93,42 +87,26 @@ class Sign_in : AppCompatActivity() {
             return
         }
 
-        // Disable button & show loading state
         btnLogin.isEnabled = false
         btnLogin.text = "Signing in..."
 
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                // Always restore button state
                 btnLogin.isEnabled = true
                 btnLogin.text = "Log In"
 
                 if (task.isSuccessful) {
-                    // Save credentials if user checked 'Remember me'
-                    if (cbRemember.isChecked) {
-                        saveUser(email, password)
-                    } else {
-                        clearUser()
-                    }
+                    if (cbRemember.isChecked) saveUser(email, password) else clearUser()
 
                     Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
                     goToHome()
-
                 } else {
-                    // Edge-case aware error handling
                     val e = task.exception
                     val message = when (e) {
-                        is FirebaseAuthInvalidUserException -> {
-                            "No account found with this email"
-                        }
-                        is FirebaseAuthInvalidCredentialsException -> {
-                            "Incorrect email or password"
-                        }
-                        else -> {
-                            e?.localizedMessage ?: "Login failed. Please try again."
-                        }
+                        is FirebaseAuthInvalidUserException -> "No account found with this email"
+                        is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password"
+                        else -> e?.localizedMessage ?: "Login failed. Please try again."
                     }
-
                     Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -152,13 +130,13 @@ class Sign_in : AppCompatActivity() {
 
     private fun loadRememberedUser() {
         val prefs = getSharedPreferences("teamflow_prefs", Context.MODE_PRIVATE)
-        val savedEmail = prefs.getString("email", "")
-        val savedPassword = prefs.getString("password", "")
         val remember = prefs.getBoolean("remember", false)
-
-        etEmail.setText(savedEmail)
-        etPassword.setText(savedPassword)
         cbRemember.isChecked = remember
+
+        if (remember) {
+            etEmail.setText(prefs.getString("email", ""))
+            etPassword.setText(prefs.getString("password", ""))
+        }
     }
 
     private fun clearUser() {
