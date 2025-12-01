@@ -161,7 +161,7 @@ class project_detail : AppCompatActivity() {
                     val statusRaw = (tSnap.child("status").getValue(String::class.java) ?: "in_progress").trim()
                     val status = statusRaw.lowercase()
                     val isDone = (status == "done" || status == "completed")
-                    if (isDone) continue   
+                    if (isDone) continue
 
                     val hoursAny = tSnap.child("hours").value
                     val hours = when (hoursAny) {
@@ -180,7 +180,7 @@ class project_detail : AppCompatActivity() {
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load tasks", Toast.LENGTH_SHORT).show()
             }
     }
-
+//removal logic
     private fun loadMembers(pid: String) {
         dbRef.child("projectMembers").child(pid).get()
             .addOnSuccessListener { snap ->
