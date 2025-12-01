@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:paddingTop="15dp"
-    tools:context=".page12a">
+    tools:context=".inbox_unread">
 
     <!-- ===== TOP BAR ===== -->
     <RelativeLayout
@@ -53,8 +53,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="All"
-            android:textColor="@color/black"
-            android:textStyle="bold"
+            android:textColor="@color/textgrey"
             android:textSize="15sp" />
 
         <TextView
@@ -64,7 +63,8 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="Unread"
-            android:textColor="@color/textgrey"
+            android:textColor="@color/black"
+            android:textStyle="bold"
             android:textSize="15sp" />
 
         <TextView
@@ -78,7 +78,7 @@
             android:textSize="15sp" />
     </LinearLayout>
 
-    <!-- ===== BLUE LINE UNDER ALL ===== -->
+    <!-- ===== BLUE LINE UNDER UNREAD ===== -->
     <LinearLayout
         android:id="@+id/tabUnderlineRow"
         android:layout_width="match_parent"
@@ -93,13 +93,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/bluebg" />
+            android:background="@android:color/transparent" />
 
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@android:color/transparent" />
+            android:background="@color/bluebg" />
 
         <View
             android:layout_width="0dp"
@@ -134,7 +134,7 @@
                 android:textSize="13.5sp"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Unread -->
+            <!-- Row 1 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
@@ -145,8 +145,7 @@
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/pfp1"
-                    android:alpha="0.5" />
+                    android:src="@drawable/pfp1" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -173,7 +172,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Unread -->
+            <!-- Row 2 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
@@ -222,7 +221,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Read -->
+            <!-- Row 1 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
@@ -233,8 +232,7 @@
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/pfp4"
-                    android:alpha="0.5" />
+                    android:src="@drawable/pfp4" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -261,7 +259,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Read -->
+            <!-- Row 2 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
@@ -272,8 +270,7 @@
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:layout_width="42dp"
                     android:layout_height="42dp"
-                    android:src="@drawable/pfp5"
-                    android:alpha="0.5" />
+                    android:src="@drawable/pfp5" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -300,7 +297,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Unread -->
+            <!-- Row 3 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="64dp"

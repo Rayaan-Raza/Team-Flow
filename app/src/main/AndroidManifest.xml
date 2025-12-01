@@ -48,21 +48,21 @@
             android:name=".settings_main"
             android:exported="false" />
         <activity
-            android:name=".page12d"
+            android:name=".message"
             android:exported="false" />
         <activity
-            android:name=".page09b"
+            android:name=".add_subtask"
             android:exported="false" />
         <activity
-            android:name=".page12a"
+            android:name=".inbox_all"
             android:exported="false" />
         <activity
-            android:name=".page12c"
+            android:name=".inbox_read"
             android:exported="false" />
         <activity
-            android:name=".page12b"
+            android:name=".inbox_unread"
             android:exported="false" />
-        <activity android:name=".page11" />
+        <activity android:name=".edit_team" />
         <activity
             android:name=".task_list_all"
             android:exported="false" />
@@ -106,22 +106,10 @@
             android:name=".splash_screen"
             android:exported="false" />
         <activity
-            android:name=".page10"
+            android:name=".add_edit_task"
             android:exported="false" />
         <activity
             android:name=".page09a"
-            android:exported="false" />
-        <activity
-            android:name=".page07"
-            android:exported="false" />
-        <activity
-            android:name=".page08c"
-            android:exported="false" />
-        <activity
-            android:name=".page08b"
-            android:exported="false" />
-        <activity
-            android:name=".page08a"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
