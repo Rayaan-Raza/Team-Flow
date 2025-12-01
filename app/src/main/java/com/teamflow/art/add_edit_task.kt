@@ -187,7 +187,6 @@ class add_edit_task : AppCompatActivity() {
                 dueAtMillis = when (dueAny) {
                     is Long -> dueAny
                     is Int -> dueAny.toLong()
-                    is String -> dueAny.toLongOrNull()
                     else -> null
                 }
 
@@ -201,9 +200,8 @@ class add_edit_task : AppCompatActivity() {
                 val list = mutableListOf<SubTaskDraft>()
                 for (s in snap.children) {
                     val id = s.key ?: continue
-                    val title = (s.child("title").getValue(String::class.java) ?: "").trim()
-                    val status = (s.child("status").getValue(String::class.java) ?: "in_progress").trim()
-
+                    val title = s.child("title").getValue(String::class.java) ?: ""
+                    val status = s.child("status").getValue(String::class.java) ?: "in_progress"
                     val hoursAny = s.child("hours").value
                     val hours = when (hoursAny) {
                         is Long -> hoursAny.toInt()
@@ -211,14 +209,14 @@ class add_edit_task : AppCompatActivity() {
                         is String -> hoursAny.toIntOrNull() ?: 0
                         else -> 0
                     }
-
                     list.add(SubTaskDraft(id = id, title = title, hours = hours, status = status))
                 }
-
-                if (list.isEmpty()) list.add(SubTaskDraft())
                 subTasksAdapter.setItems(list)
             }
     }
+
+    // ✅ default assignee = current user if you don't select anyone
+    private fun defaultAssignees(uid: String): Map<String, Any> = mapOf(uid to true)
 
     private fun createTask(pid: String) {
         val uid = currentUid ?: run {
@@ -242,65 +240,46 @@ class add_edit_task : AppCompatActivity() {
 
         val now = System.currentTimeMillis()
 
-        // Fetch project members -> use them as task assignees
-        dbRef.child("projectMembers").child(pid).get()
-            .addOnSuccessListener { memSnap ->
-                val memberUids = memSnap.children.mapNotNull { it.key }.toMutableSet()
+        val updates = hashMapOf<String, Any?>()
 
-                // safety: never allow "0 assignees" (would block completion)
-                if (memberUids.isEmpty()) memberUids.add(uid)
+        updates["projectTasks/$pid/$tid"] = mapOf(
+            "id" to tid,
+            "projectId" to pid,
+            "title" to title,
+            "description" to desc,
+            "status" to "in_progress",
+            "dueAt" to dueAtMillis,
+            "createdBy" to uid,
+            "createdAt" to now,
+            "updatedAt" to now,
+            "assignees" to defaultAssignees(uid)   // ✅ NEW
+            // doneBy not set yet (empty)
+        )
 
-                val updates = hashMapOf<String, Any?>()
+        // subtasks: new ones also get default assignee = creator
+        val subs = subTasksAdapter.getItems().filter { it.title.isNotBlank() }
+        for (s in subs) {
+            val sid = dbRef.child("taskSubTasks").child(pid).child(tid).push().key ?: continue
+            updates["taskSubTasks/$pid/$tid/$sid"] = mapOf(
+                "id" to sid,
+                "projectId" to pid,
+                "taskId" to tid,
+                "title" to s.title.trim(),
+                "hours" to s.hours,
+                "status" to "in_progress",
+                "createdAt" to now,
+                "updatedAt" to now,
+                "assignees" to defaultAssignees(uid) // ✅ NEW
+            )
+        }
 
-                // main task
-                updates["projectTasks/$pid/$tid"] = mapOf(
-                    "id" to tid,
-                    "projectId" to pid,
-                    "title" to title,
-                    "description" to desc,
-                    "status" to "in_progress",
-                    "dueAt" to dueAtMillis,
-                    "createdBy" to uid,
-                    "createdAt" to now,
-                    "updatedAt" to now
-                )
-
-                // assignees map
-                for (auid in memberUids) {
-                    updates["projectTasks/$pid/$tid/assignees/$auid"] = true
-                }
-
-                // doneBy should start empty (don’t write anything here)
-
-                // subtasks
-                val subs = subTasksAdapter.getItems().filter { it.title.isNotBlank() }
-                for (s in subs) {
-                    val sid = dbRef.child("taskSubTasks").child(pid).child(tid).push().key ?: continue
-                    updates["taskSubTasks/$pid/$tid/$sid"] = mapOf(
-                        "id" to sid,
-                        "projectId" to pid,
-                        "taskId" to tid,
-                        "title" to s.title.trim(),
-                        "hours" to s.hours,
-                        "status" to s.status,
-                        "createdAt" to now,
-                        "updatedAt" to now
-                    )
-                }
-
-                dbRef.updateChildren(updates)
-                    .addOnSuccessListener {
-                        recountProjectTotals(pid)
-                        Toast.makeText(this, "Task created", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
-                    }
+        dbRef.updateChildren(updates)
+            .addOnSuccessListener {
+                recountProjectTotals(pid)
+                Toast.makeText(this, "Task created", Toast.LENGTH_SHORT).show()
+                finish()
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to read project members", Toast.LENGTH_SHORT).show()
-            }
+            .addOnFailureListener { Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show() }
     }
 
     private fun updateTask(pid: String, tid: String) {
@@ -322,16 +301,20 @@ class add_edit_task : AppCompatActivity() {
 
                 val existingIds = existingSnap.children.mapNotNull { it.key }.toSet()
                 val presentIds = mutableSetOf<String>()
+
                 val updates = hashMapOf<String, Any?>()
 
+                // update main task fields (DO NOT overwrite assignees/doneBy)
                 updates["projectTasks/$pid/$tid/title"] = title
                 updates["projectTasks/$pid/$tid/description"] = desc
                 updates["projectTasks/$pid/$tid/dueAt"] = dueAtMillis
                 updates["projectTasks/$pid/$tid/updatedAt"] = now
                 updates["projectTasks/$pid/$tid/editedBy"] = uid
 
+                // subtasks: create/update/delete (DO NOT overwrite assignees/doneBy for existing)
                 for (s in subTasksAdapter.getItems()) {
                     val st = s.title.trim()
+
                     if (st.isBlank()) {
                         if (!s.id.isNullOrBlank()) updates["taskSubTasks/$pid/$tid/${s.id}"] = null
                         continue
@@ -344,17 +327,28 @@ class add_edit_task : AppCompatActivity() {
                     s.id = sid
                     presentIds.add(sid)
 
-                    updates["taskSubTasks/$pid/$tid/$sid"] = mapOf(
-                        "id" to sid,
-                        "projectId" to pid,
-                        "taskId" to tid,
-                        "title" to st,
-                        "hours" to s.hours,
-                        "status" to s.status,
-                        "updatedAt" to now
-                    )
+                    if (s.id != null && existingIds.contains(sid)) {
+                        // ✅ update only fields (preserve assignees/doneBy)
+                        updates["taskSubTasks/$pid/$tid/$sid/title"] = st
+                        updates["taskSubTasks/$pid/$tid/$sid/hours"] = s.hours
+                        updates["taskSubTasks/$pid/$tid/$sid/updatedAt"] = now
+                    } else {
+                        // ✅ new subtask gets default assignee
+                        updates["taskSubTasks/$pid/$tid/$sid"] = mapOf(
+                            "id" to sid,
+                            "projectId" to pid,
+                            "taskId" to tid,
+                            "title" to st,
+                            "hours" to s.hours,
+                            "status" to "in_progress",
+                            "createdAt" to now,
+                            "updatedAt" to now,
+                            "assignees" to defaultAssignees(currentUid ?: "")
+                        )
+                    }
                 }
 
+                // delete old missing
                 for (old in existingIds) {
                     if (!presentIds.contains(old)) updates["taskSubTasks/$pid/$tid/$old"] = null
                 }

@@ -67,22 +67,12 @@ class project_detail : AppCompatActivity() {
             startActivity(i)
         }
 
-        val pid = projectId!!
-        cleanupGhostTasks(pid) {
-            recountProjectTotals(pid) {
-                refreshAll()
-            }
-        }
+        refreshAll()
     }
 
     override fun onResume() {
         super.onResume()
-        val pid = projectId ?: return
-        cleanupGhostTasks(pid) {
-            recountProjectTotals(pid) {
-                refreshAll()
-            }
-        }
+        refreshAll()
     }
 
     private fun bindViews() {
@@ -147,6 +137,7 @@ class project_detail : AppCompatActivity() {
             }
     }
 
+    // ✅ hides completed tasks (they "disappear" from Project Detail once done)
     private fun loadTasks(pid: String) {
         dbRef.child("projectTasks").child(pid).get()
             .addOnSuccessListener { snap ->
@@ -154,14 +145,13 @@ class project_detail : AppCompatActivity() {
 
                 for (tSnap in snap.children) {
                     val id = tSnap.key ?: continue
-
                     val title = (tSnap.child("title").getValue(String::class.java) ?: "").trim()
                     if (title.isBlank()) continue
 
-                    val statusRaw = (tSnap.child("status").getValue(String::class.java) ?: "in_progress").trim()
-                    val status = statusRaw.lowercase()
-                    val isDone = (status == "done" || status == "completed")
-                    if (isDone) continue
+                    val status = (tSnap.child("status").getValue(String::class.java) ?: "in_progress").trim()
+                    val sLower = status.lowercase()
+                    val isDone = (sLower == "done" || sLower == "completed")
+                    if (isDone) continue  // ✅ remove from UI
 
                     val hoursAny = tSnap.child("hours").value
                     val hours = when (hoursAny) {
@@ -171,7 +161,7 @@ class project_detail : AppCompatActivity() {
                         else -> 0
                     }
 
-                    list.add(ProjectTaskItem(id = id, title = title, hours = hours, status = statusRaw))
+                    list.add(ProjectTaskItem(id = id, title = title, hours = hours, status = status))
                 }
 
                 tasksAdapter.setTasks(list)
@@ -180,7 +170,7 @@ class project_detail : AppCompatActivity() {
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load tasks", Toast.LENGTH_SHORT).show()
             }
     }
-//removal logic
+
     private fun loadMembers(pid: String) {
         dbRef.child("projectMembers").child(pid).get()
             .addOnSuccessListener { snap ->
@@ -206,9 +196,7 @@ class project_detail : AppCompatActivity() {
                         .addOnCompleteListener {
                             remaining--
                             if (remaining == 0) {
-                                val ordered = uids.map { id ->
-                                    temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id)
-                                }
+                                val ordered = uids.map { id -> temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id) }
                                 membersAdapter.setMembers(ordered)
                             }
                         }
@@ -217,55 +205,5 @@ class project_detail : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load members", Toast.LENGTH_SHORT).show()
             }
-    }
-
-    // --- Fix hidden/blank tasks + correct totals + correct project status ---
-    private fun cleanupGhostTasks(pid: String, done: (() -> Unit)? = null) {
-        dbRef.child("projectTasks").child(pid).get()
-            .addOnSuccessListener { snap ->
-                val updates = hashMapOf<String, Any?>()
-                for (t in snap.children) {
-                    val tid = t.key ?: continue
-                    val title = (t.child("title").getValue(String::class.java) ?: "").trim()
-                    if (title.isBlank()) {
-                        updates["projectTasks/$pid/$tid"] = null
-                    }
-                }
-
-                if (updates.isEmpty()) {
-                    done?.invoke()
-                } else {
-                    dbRef.updateChildren(updates).addOnCompleteListener { done?.invoke() }
-                }
-            }
-            .addOnFailureListener { done?.invoke() }
-    }
-
-    private fun recountProjectTotals(pid: String, done: (() -> Unit)? = null) {
-        dbRef.child("projectTasks").child(pid).get()
-            .addOnSuccessListener { snap ->
-                var total = 0
-                var doneCount = 0
-
-                for (t in snap.children) {
-                    val title = (t.child("title").getValue(String::class.java) ?: "").trim()
-                    if (title.isBlank()) continue
-
-                    total++
-                    val s = (t.child("status").getValue(String::class.java) ?: "in_progress").lowercase()
-                    if (s == "done" || s == "completed") doneCount++
-                }
-
-                val projectStatus = if (total > 0 && doneCount == total) "completed" else "in_progress"
-                val updates = hashMapOf<String, Any?>(
-                    "projects/$pid/tasksTotal" to total,
-                    "projects/$pid/tasksDone" to doneCount,
-                    "projects/$pid/status" to projectStatus,
-                    "projects/$pid/updatedAt" to System.currentTimeMillis()
-                )
-
-                dbRef.updateChildren(updates).addOnCompleteListener { done?.invoke() }
-            }
-            .addOnFailureListener { done?.invoke() }
     }
 }

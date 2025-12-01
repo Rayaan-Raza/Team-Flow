@@ -31,12 +31,11 @@ class ProjectDetailTasksAdapter(
         holder.tvTitle.text = t.title
         holder.tvHours.text = " ${t.hours} hr"
 
-        val s = t.status.lowercase()
+        val s = t.status.trim().lowercase()
         val isDone = (s == "done" || s == "completed")
 
-        // Use your icons
         holder.ivStatus.setImageResource(
-            if (isDone) R.drawable.completed_tick else R.drawable.not_completed
+            if (isDone) R.drawable.circle_check else R.drawable.not_completed
         )
 
         holder.itemView.setOnClickListener { onClick?.invoke(t) }

@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,8 +46,6 @@ class task_detail : AppCompatActivity() {
     private var projectId: String? = null
     private var taskId: String? = null
 
-    private var currentUid: String? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -57,8 +56,6 @@ class task_detail : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
-        currentUid = auth.currentUser?.uid
 
         projectId = intent.getStringExtra("projectId")
         taskId = intent.getStringExtra("taskId")
@@ -89,10 +86,10 @@ class task_detail : AppCompatActivity() {
         }
 
         btnAddAssignee.setOnClickListener {
-            Toast.makeText(this, "Assignee editing later", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Assign/edit members later", Toast.LENGTH_SHORT).show()
         }
 
-        btnMarkDone.setOnClickListener { onMarkDoneClicked() }
+        btnMarkDone.setOnClickListener { markTaskDoneForMe() }
 
         refreshAll()
     }
@@ -122,7 +119,17 @@ class task_detail : AppCompatActivity() {
         rvMembers.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvMembers.adapter = membersAdapter
 
-        subTasksAdapter = ProjectDetailTasksAdapter(subTaskItems) { /* no-op click */ }
+        // ✅ click subtask -> add_subtask
+        subTasksAdapter = ProjectDetailTasksAdapter(subTaskItems) { sub ->
+            val pid = projectId ?: return@ProjectDetailTasksAdapter
+            val tid = taskId ?: return@ProjectDetailTasksAdapter
+            val i = Intent(this, add_subtask::class.java)
+            i.putExtra("projectId", pid)
+            i.putExtra("taskId", tid)
+            i.putExtra("subTaskId", sub.id)
+            startActivity(i)
+        }
+
         rvSubTasks.layoutManager = LinearLayoutManager(this)
         rvSubTasks.adapter = subTasksAdapter
     }
@@ -130,25 +137,17 @@ class task_detail : AppCompatActivity() {
     private fun refreshAll() {
         val pid = projectId ?: return
         val tid = taskId ?: return
-
         loadTask(pid, tid)
-        loadTaskAssignees(pid, tid)
+        loadMembers(pid)
         loadSubTasks(pid, tid)
     }
 
     private fun loadTask(pid: String, tid: String) {
         dbRef.child("projectTasks").child(pid).child(tid).get()
             .addOnSuccessListener { snap ->
-                if (!snap.exists()) {
-                    Toast.makeText(this, "Task not found", Toast.LENGTH_SHORT).show()
-                    finish()
-                    return@addOnSuccessListener
-                }
-
                 val title = snap.child("title").getValue(String::class.java) ?: "Untitled task"
                 val desc = snap.child("description").getValue(String::class.java) ?: ""
-                val statusRaw = (snap.child("status").getValue(String::class.java) ?: "in_progress").trim()
-                val status = statusRaw.lowercase()
+                val status = snap.child("status").getValue(String::class.java) ?: "in_progress"
 
                 tvTitle.text = title
                 tvDesc.text = desc
@@ -163,57 +162,16 @@ class task_detail : AppCompatActivity() {
                 if (due != null) {
                     val fmt = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
                     tvDue.text = "Due date: ${fmt.format(Date(due))}"
-                } else {
-                    tvDue.text = "Due date: Not set"
-                }
+                } else tvDue.text = "Due date: Not set"
 
-                val uid = currentUid
-                val isTaskDone = (status == "done" || status == "completed")
-
-                // per-user done state
-                val iMarkedDone = uid != null && snap.child("doneBy").child(uid).exists()
-
-                if (isTaskDone) {
-                    btnMarkDone.isEnabled = false
-                    btnMarkDone.text = "Completed"
-                } else {
-                    if (iMarkedDone) {
-                        btnMarkDone.isEnabled = false
-                        btnMarkDone.text = "Marked done (waiting)"
-                    } else {
-                        btnMarkDone.isEnabled = true
-                        btnMarkDone.text = "Mark as done"
-                    }
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to load task", Toast.LENGTH_SHORT).show()
+                val s = status.lowercase()
+                val isDone = (s == "done" || s == "completed")
+                btnMarkDone.isEnabled = !isDone
+                btnMarkDone.text = if (isDone) "Completed" else "Mark as done"
             }
     }
 
-    /**
-     * Shows assignees for THIS TASK (not project members).
-     * Falls back to project members if task has no assignees yet.
-     */
-    private fun loadTaskAssignees(pid: String, tid: String) {
-        dbRef.child("projectTasks").child(pid).child(tid).child("assignees").get()
-            .addOnSuccessListener { snap ->
-                val uids = snap.children.mapNotNull { it.key }
-
-                if (uids.isEmpty()) {
-                    // fallback for older tasks (no assignees stored yet)
-                    loadProjectMembers(pid)
-                    return@addOnSuccessListener
-                }
-
-                enrichUsersToMembers(uids) { membersAdapter.setMembers(it) }
-            }
-            .addOnFailureListener {
-                loadProjectMembers(pid)
-            }
-    }
-
-    private fun loadProjectMembers(pid: String) {
+    private fun loadMembers(pid: String) {
         dbRef.child("projectMembers").child(pid).get()
             .addOnSuccessListener { snap ->
                 val uids = snap.children.mapNotNull { it.key }
@@ -221,35 +179,27 @@ class task_detail : AppCompatActivity() {
                     membersAdapter.setMembers(emptyList())
                     return@addOnSuccessListener
                 }
-                enrichUsersToMembers(uids) { membersAdapter.setMembers(it) }
-            }
-            .addOnFailureListener {
-                membersAdapter.setMembers(emptyList())
-            }
-    }
 
-    private fun enrichUsersToMembers(uids: List<String>, onDone: (List<MemberItem>) -> Unit) {
-        val temp = mutableListOf<MemberItem>()
-        var remaining = uids.size
+                val temp = mutableListOf<MemberItem>()
+                var remaining = uids.size
 
-        for (uid in uids) {
-            dbRef.child("users").child(uid).get()
-                .addOnSuccessListener { uSnap ->
-                    val name = uSnap.child("name").getValue(String::class.java) ?: ""
-                    val photo = uSnap.child("photoBase64").getValue(String::class.java)
-                    temp.add(MemberItem(uid = uid, name = name, photoBase64 = photo))
+                for (uid in uids) {
+                    dbRef.child("users").child(uid).get()
+                        .addOnSuccessListener { uSnap ->
+                            val name = uSnap.child("name").getValue(String::class.java) ?: ""
+                            val photo = uSnap.child("photoBase64").getValue(String::class.java)
+                            temp.add(MemberItem(uid = uid, name = name, photoBase64 = photo))
+                        }
+                        .addOnFailureListener { temp.add(MemberItem(uid = uid)) }
+                        .addOnCompleteListener {
+                            remaining--
+                            if (remaining == 0) {
+                                val ordered = uids.map { id -> temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id) }
+                                membersAdapter.setMembers(ordered)
+                            }
+                        }
                 }
-                .addOnFailureListener {
-                    temp.add(MemberItem(uid = uid))
-                }
-                .addOnCompleteListener {
-                    remaining--
-                    if (remaining == 0) {
-                        val ordered = uids.map { id -> temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id) }
-                        onDone(ordered)
-                    }
-                }
-        }
+            }
     }
 
     private fun loadSubTasks(pid: String, tid: String) {
@@ -262,6 +212,9 @@ class task_detail : AppCompatActivity() {
                     if (title.isBlank()) continue
 
                     val status = (s.child("status").getValue(String::class.java) ?: "in_progress").trim()
+                    val sLower = status.lowercase()
+                    val isDone = (sLower == "done" || sLower == "completed")
+                    if (isDone) continue  // ✅ remove completed subtask from task_detail list
 
                     val hoursAny = s.child("hours").value
                     val hours = when (hoursAny) {
@@ -277,76 +230,83 @@ class task_detail : AppCompatActivity() {
             }
     }
 
-    private fun onMarkDoneClicked() {
+    // ===================== COMPLETION LOGIC =====================
+
+    private fun markTaskDoneForMe() {
         val pid = projectId ?: return
         val tid = taskId ?: return
-        val uid = currentUid
-
-        if (uid.isNullOrBlank()) {
+        val uid = auth.currentUser?.uid ?: run {
             Toast.makeText(this, "Login required", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val now = System.currentTimeMillis()
-
-        // Step 1) mark THIS user as doneBy
-        val updates = hashMapOf<String, Any?>(
-            "projectTasks/$pid/$tid/doneBy/$uid" to true,
-            "projectTasks/$pid/$tid/updatedAt" to now
-        )
-
-        dbRef.updateChildren(updates)
+        // mark MY done
+        dbRef.child("projectTasks").child(pid).child(tid).child("doneBy").child(uid).setValue(true)
             .addOnSuccessListener {
-                // Step 2) check if everyone is done, then finalize status if yes
-                checkAndFinalizeTask(pid, tid)
+                attemptFinalizeTask(pid, tid)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun checkAndFinalizeTask(pid: String, tid: String) {
+    private fun attemptFinalizeTask(pid: String, tid: String) {
+        // Need: task assignees all doneBy AND all subtasks done
         dbRef.child("projectTasks").child(pid).child(tid).get()
-            .addOnSuccessListener { snap ->
-                // if assignees is missing, fallback to "only current user" to avoid blocking
-                val assignees = snap.child("assignees").children.mapNotNull { it.key }.toSet()
-                val doneBy = snap.child("doneBy").children.mapNotNull { it.key }.toSet()
+            .addOnSuccessListener { taskSnap ->
+                val assignees = taskSnap.child("assignees").children.mapNotNull { it.key }.toSet()
+                val doneBy = taskSnap.child("doneBy").children.mapNotNull { it.key }.toSet()
 
-                val uid = currentUid
                 val effectiveAssignees =
                     if (assignees.isNotEmpty()) assignees
-                    else if (!uid.isNullOrBlank()) setOf(uid)
-                    else emptySet()
+                    else setOfNotNull(taskSnap.child("createdBy").getValue(String::class.java), auth.currentUser?.uid)
 
-                // ensure the fallback assignee exists in DB too (optional but helps consistency)
-                if (assignees.isEmpty() && !uid.isNullOrBlank()) {
-                    dbRef.child("projectTasks").child(pid).child(tid).child("assignees").child(uid).setValue(true)
-                }
+                val allAssigneesClicked = effectiveAssignees.all { doneBy.contains(it) }
 
-                val allDone = effectiveAssignees.isNotEmpty() && doneBy.containsAll(effectiveAssignees)
+                // block if any subtask incomplete
+                dbRef.child("taskSubTasks").child(pid).child(tid).get()
+                    .addOnSuccessListener { subsSnap ->
+                        val allSubTasksDone = areAllSubtasksDone(subsSnap, effectiveAssignees)
 
-                if (allDone) {
-                    val now = System.currentTimeMillis()
-                    val finalize = hashMapOf<String, Any?>(
-                        "projectTasks/$pid/$tid/status" to "done",
-                        "projectTasks/$pid/$tid/updatedAt" to now
-                    )
-
-                    dbRef.updateChildren(finalize)
-                        .addOnSuccessListener {
-                            recountProjectTotals(pid)
+                        val now = System.currentTimeMillis()
+                        if (allAssigneesClicked && allSubTasksDone) {
+                            val updates = hashMapOf<String, Any?>(
+                                "projectTasks/$pid/$tid/status" to "done",
+                                "projectTasks/$pid/$tid/updatedAt" to now
+                            )
+                            dbRef.updateChildren(updates).addOnSuccessListener {
+                                recountProjectTotals(pid)
+                                refreshAll()
+                                Toast.makeText(this, "Task completed", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            // keep in progress; just refresh so UI reflects "waiting"
+                            dbRef.child("projectTasks").child(pid).child(tid).child("status").setValue("in_progress")
                             refreshAll()
-                            Toast.makeText(this, "Task completed", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this, "Marked by you. Waiting for others / subtasks.", Toast.LENGTH_SHORT).show()
                         }
-                } else {
-                    // not all done yet, stay in_progress
-                    refreshAll()
-                    Toast.makeText(this, "Marked done (waiting others)", Toast.LENGTH_SHORT).show()
-                }
+                    }
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to verify completion", Toast.LENGTH_SHORT).show()
-            }
+    }
+
+    private fun areAllSubtasksDone(subsSnap: DataSnapshot, fallbackAssignees: Set<String>): Boolean {
+        // If no subtasks => OK
+        if (!subsSnap.exists()) return true
+
+        for (s in subsSnap.children) {
+            val status = (s.child("status").getValue(String::class.java) ?: "in_progress").lowercase()
+            val isStatusDone = (status == "done" || status == "completed")
+            if (isStatusDone) continue
+
+            // if status not updated, compute from doneBy/assignees
+            val subAssignees = s.child("assignees").children.mapNotNull { it.key }.toSet()
+            val subDoneBy = s.child("doneBy").children.mapNotNull { it.key }.toSet()
+            val effective = if (subAssignees.isNotEmpty()) subAssignees else fallbackAssignees
+
+            val allClicked = effective.isNotEmpty() && effective.all { subDoneBy.contains(it) }
+            if (!allClicked) return false
+        }
+        return true
     }
 
     private fun recountProjectTotals(pid: String) {
