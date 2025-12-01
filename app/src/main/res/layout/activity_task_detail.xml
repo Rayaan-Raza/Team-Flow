@@ -9,7 +9,6 @@
     android:id="@+id/main"
     tools:context=".task_detail">
 
-    <!-- ===== TOP BAR ===== -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -35,7 +34,6 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Edit (replace drawable if you have a pencil icon) -->
         <ImageView
             android:id="@+id/btnEdit"
             android:layout_width="40dp"
@@ -44,7 +42,6 @@
             android:src="@drawable/edit_pen" />
     </RelativeLayout>
 
-    <!-- ===== CONTENT ===== -->
     <ScrollView
         android:id="@+id/scroll"
         android:layout_width="match_parent"
@@ -61,9 +58,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp">
 
-            <!-- ===== Task info card ===== -->
             <LinearLayout
-                android:id="@+id/cardTaskInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -75,17 +70,17 @@
                     android:id="@+id/taskTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Landing Page Design"
+                    android:text="Task Heading"
                     android:textStyle="bold"
                     android:textSize="20sp"
-                    android:textColor="@color/black"
-                    android:paddingBottom="4dp" />
+                    android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/taskDesc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Create a Landing Page Design that is both interactive, user-friendly but at the same time gives a modern look."
+                    android:layout_marginTop="6dp"
+                    android:text=""
                     android:textSize="13sp"
                     android:textColor="@color/textgrey" />
 
@@ -93,17 +88,22 @@
                     android:id="@+id/taskDue"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:layout_gravity="center_horizontal"
-                    android:text="Due date:  Sunday,  5 October 2025"
+                    android:layout_marginTop="12dp"
+                    android:text="Due date: Not set"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textColor="@color/black" />
+
+                <Button
+                    android:id="@+id/btnMarkDone"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="12dp"
+                    android:text="Mark as done"
+                    android:textAllCaps="false"/>
             </LinearLayout>
 
-            <!-- ===== Assigned to card ===== -->
             <LinearLayout
-                android:id="@+id/cardAssigned"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -112,70 +112,38 @@
                 android:layout_marginTop="16dp">
 
                 <TextView
-                    android:id="@+id/assignedLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Assigned to"
                     android:textStyle="bold"
                     android:textSize="15sp"
-                    android:textColor="@color/black"
-                    android:paddingBottom="8dp" />
+                    android:textColor="@color/black" />
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp">
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/pfp1"
-                        android:layout_width="40dp"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvMembers"
+                        android:layout_width="0dp"
                         android:layout_height="40dp"
-                        android:layout_alignParentStart="true"
-                        android:src="@drawable/pfp1" />
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/pfp2"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_toEndOf="@id/pfp1"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/pfp2" />
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/pfp3"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_toEndOf="@id/pfp2"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/pfp3" />
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/pfp4"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_toEndOf="@id/pfp3"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/pfp4" />
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:id="@+id/pfp5"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_toEndOf="@id/pfp4"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/pfp5" />
+                        android:layout_weight="1"
+                        android:overScrollMode="never"
+                        android:nestedScrollingEnabled="false" />
 
                     <ImageView
                         android:id="@+id/btnAddAssignee"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:layout_alignParentEnd="true"
+                        android:layout_marginStart="12dp"
                         android:src="@drawable/add_dotted" />
-                </RelativeLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- ===== Sub Tasks card ===== -->
             <LinearLayout
-                android:id="@+id/cardSubTasks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -186,11 +154,9 @@
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingBottom="8dp">
+                    android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/subTasksLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sub Tasks"
@@ -199,365 +165,29 @@
                         android:textColor="@color/black" />
 
                     <ImageView
-                        android:id="@+id/btnAddSubTask"
+                        android:id="@+id/btnEditSubTasks"
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:layout_alignParentEnd="true"
-                        android:src="@drawable/add_dotted" />
+                        android:src="@drawable/edit_pen" />
                 </RelativeLayout>
 
-                <!-- ==== Row 1 (checked) ==== -->
-                <LinearLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSubTasks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="10dp">
-
-                    <!-- Use your checked icon here if available -->
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/completed_tick" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Make Initial Design"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:textSize="15sp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="25 hr"
-                                android:textSize="12sp"
-                                android:textColor="@color/textgrey" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/pfp2" />
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:layout_marginStart="-6dp"
-                            android:src="@drawable/pfp5" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/greybg" />
-
-                <!-- ==== Row 2 (checked) ==== -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="10dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/completed_tick" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Get Design Approved"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:textSize="15sp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="18 hr"
-                                android:textSize="12sp"
-                                android:textColor="@color/textgrey" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/pfp3" />
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:layout_marginStart="-6dp"
-                            android:src="@drawable/pfp4" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/greybg" />
-
-                <!-- ==== Row 3 (unchecked) ==== -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="10dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/not_completed" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Start Development"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:textSize="15sp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="8 hr"
-                                android:textSize="12sp"
-                                android:textColor="@color/textgrey" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <de.hdodenhof.circleimageview.CircleImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
-                        android:src="@drawable/pfp1" />
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/greybg" />
-
-                <!-- ==== Row 4 (unchecked) ==== -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="10dp">
-
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:src="@drawable/not_completed" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Test using Espresso"
-                            android:textStyle="bold"
-                            android:textColor="@color/black"
-                            android:textSize="15sp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginTop="2dp">
-
-                            <ImageView
-                                android:layout_width="14dp"
-                                android:layout_height="14dp"
-                                android:src="@drawable/flag" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:text="40 hr"
-                                android:textSize="12sp"
-                                android:textColor="@color/textgrey" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:src="@drawable/pfp2" />
-
-                        <de.hdodenhof.circleimageview.CircleImageView
-                            android:layout_width="26dp"
-                            android:layout_height="26dp"
-                            android:layout_marginStart="-6dp"
-                            android:src="@drawable/pfp5" />
-                    </LinearLayout>
-                </LinearLayout>
-
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"/>
             </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- ===== BOTTOM NAV ===== -->
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:orientation="horizontal"
-        android:weightSum="5"
-        android:background="@drawable/bg_bottom_nav_round"
-        android:elevation="8dp"
-        android:paddingVertical="8dp">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:src="@drawable/home_unselect" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:src="@drawable/project_selected" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:src="@drawable/calendar_unselect" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:src="@drawable/inbox_unselect" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="10dp"
-                android:src="@drawable/profile_unselect" />
-        </LinearLayout>
-    </LinearLayout>
-
+        android:background="@drawable/bg_bottom_nav_round"/>
 </RelativeLayout>

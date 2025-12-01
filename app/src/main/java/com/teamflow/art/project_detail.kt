@@ -3,7 +3,6 @@ package com.teamflow.art
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -68,12 +67,22 @@ class project_detail : AppCompatActivity() {
             startActivity(i)
         }
 
-        refreshAll()
+        val pid = projectId!!
+        cleanupGhostTasks(pid) {
+            recountProjectTotals(pid) {
+                refreshAll()
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        refreshAll()
+        val pid = projectId ?: return
+        cleanupGhostTasks(pid) {
+            recountProjectTotals(pid) {
+                refreshAll()
+            }
+        }
     }
 
     private fun bindViews() {
@@ -93,7 +102,14 @@ class project_detail : AppCompatActivity() {
         rvMembers.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvMembers.adapter = membersAdapter
 
-        tasksAdapter = ProjectDetailTasksAdapter(taskItems)
+        tasksAdapter = ProjectDetailTasksAdapter(taskItems) { task ->
+            val pid = projectId ?: return@ProjectDetailTasksAdapter
+            val i = Intent(this, task_detail::class.java)
+            i.putExtra("projectId", pid)
+            i.putExtra("taskId", task.id)
+            startActivity(i)
+        }
+
         rvTasks.layoutManager = LinearLayoutManager(this)
         rvTasks.adapter = tasksAdapter
     }
@@ -135,10 +151,17 @@ class project_detail : AppCompatActivity() {
         dbRef.child("projectTasks").child(pid).get()
             .addOnSuccessListener { snap ->
                 val list = mutableListOf<ProjectTaskItem>()
+
                 for (tSnap in snap.children) {
                     val id = tSnap.key ?: continue
-                    val title = tSnap.child("title").getValue(String::class.java) ?: ""
-                    val status = tSnap.child("status").getValue(String::class.java) ?: "in_progress"
+
+                    val title = (tSnap.child("title").getValue(String::class.java) ?: "").trim()
+                    if (title.isBlank()) continue
+
+                    val statusRaw = (tSnap.child("status").getValue(String::class.java) ?: "in_progress").trim()
+                    val status = statusRaw.lowercase()
+                    val isDone = (status == "done" || status == "completed")
+                    if (isDone) continue   
 
                     val hoursAny = tSnap.child("hours").value
                     val hours = when (hoursAny) {
@@ -148,10 +171,9 @@ class project_detail : AppCompatActivity() {
                         else -> 0
                     }
 
-                    if (title.isNotBlank()) {
-                        list.add(ProjectTaskItem(id = id, title = title, hours = hours, status = status))
-                    }
+                    list.add(ProjectTaskItem(id = id, title = title, hours = hours, status = statusRaw))
                 }
+
                 tasksAdapter.setTasks(list)
             }
             .addOnFailureListener { e ->
@@ -168,7 +190,6 @@ class project_detail : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // Try to enrich from /users/{uid} if you have it; else it still works with uid only
                 val temp = mutableListOf<MemberItem>()
                 var remaining = uids.size
 
@@ -185,8 +206,9 @@ class project_detail : AppCompatActivity() {
                         .addOnCompleteListener {
                             remaining--
                             if (remaining == 0) {
-                                // keep stable order (same as uids)
-                                val ordered = uids.map { id -> temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id) }
+                                val ordered = uids.map { id ->
+                                    temp.firstOrNull { it.uid == id } ?: MemberItem(uid = id)
+                                }
                                 membersAdapter.setMembers(ordered)
                             }
                         }
@@ -195,5 +217,55 @@ class project_detail : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load members", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    // --- Fix hidden/blank tasks + correct totals + correct project status ---
+    private fun cleanupGhostTasks(pid: String, done: (() -> Unit)? = null) {
+        dbRef.child("projectTasks").child(pid).get()
+            .addOnSuccessListener { snap ->
+                val updates = hashMapOf<String, Any?>()
+                for (t in snap.children) {
+                    val tid = t.key ?: continue
+                    val title = (t.child("title").getValue(String::class.java) ?: "").trim()
+                    if (title.isBlank()) {
+                        updates["projectTasks/$pid/$tid"] = null
+                    }
+                }
+
+                if (updates.isEmpty()) {
+                    done?.invoke()
+                } else {
+                    dbRef.updateChildren(updates).addOnCompleteListener { done?.invoke() }
+                }
+            }
+            .addOnFailureListener { done?.invoke() }
+    }
+
+    private fun recountProjectTotals(pid: String, done: (() -> Unit)? = null) {
+        dbRef.child("projectTasks").child(pid).get()
+            .addOnSuccessListener { snap ->
+                var total = 0
+                var doneCount = 0
+
+                for (t in snap.children) {
+                    val title = (t.child("title").getValue(String::class.java) ?: "").trim()
+                    if (title.isBlank()) continue
+
+                    total++
+                    val s = (t.child("status").getValue(String::class.java) ?: "in_progress").lowercase()
+                    if (s == "done" || s == "completed") doneCount++
+                }
+
+                val projectStatus = if (total > 0 && doneCount == total) "completed" else "in_progress"
+                val updates = hashMapOf<String, Any?>(
+                    "projects/$pid/tasksTotal" to total,
+                    "projects/$pid/tasksDone" to doneCount,
+                    "projects/$pid/status" to projectStatus,
+                    "projects/$pid/updatedAt" to System.currentTimeMillis()
+                )
+
+                dbRef.updateChildren(updates).addOnCompleteListener { done?.invoke() }
+            }
+            .addOnFailureListener { done?.invoke() }
     }
 }

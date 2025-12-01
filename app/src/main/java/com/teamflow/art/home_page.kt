@@ -76,6 +76,12 @@ class home_page : AppCompatActivity() {
         navProfile.setOnClickListener { Toast.makeText(this, "Profile", Toast.LENGTH_SHORT).show() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        loadAssignedProjects()
+    }
+
+
     override fun onStart() {
         super.onStart()
         val currentUser = auth.currentUser

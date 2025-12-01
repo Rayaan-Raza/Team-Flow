@@ -8,7 +8,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class ProjectDetailTasksAdapter(
-    private val items: MutableList<ProjectTaskItem>
+    private val items: MutableList<ProjectTaskItem>,
+    private val onClick: ((ProjectTaskItem) -> Unit)? = null
 ) : RecyclerView.Adapter<ProjectDetailTasksAdapter.VH>() {
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -33,9 +34,12 @@ class ProjectDetailTasksAdapter(
         val s = t.status.lowercase()
         val isDone = (s == "done" || s == "completed")
 
-        holder.ivStatus.setBackgroundResource(
-            if (isDone) R.drawable.circle_check else R.drawable.bg_circle_mask
+        // Use your icons
+        holder.ivStatus.setImageResource(
+            if (isDone) R.drawable.completed_tick else R.drawable.not_completed
         )
+
+        holder.itemView.setOnClickListener { onClick?.invoke(t) }
     }
 
     fun setTasks(list: List<ProjectTaskItem>) {
