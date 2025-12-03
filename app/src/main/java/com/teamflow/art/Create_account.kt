@@ -40,6 +40,8 @@ class Create_account : AppCompatActivity() {
 
         tvSignIn.setOnClickListener {
             startActivity(Intent(this, Sign_in::class.java))
+            overridePendingTransition(0, 0)
+            overridePendingTransition(0, 0)
             finish()
         }
 
@@ -47,6 +49,11 @@ class Create_account : AppCompatActivity() {
     }
 
     private fun registerUser() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0,0)
+            return
+        }
         val name = etName.text.toString().trim()
         val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString().trim()
@@ -127,19 +134,6 @@ class Create_account : AppCompatActivity() {
                     "createdAt" to System.currentTimeMillis()
                 )
 
-                FirebaseDatabase.getInstance().reference
-                    .child("users")
-                    .child(uid)
-                    .setValue(user)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, home_page::class.java))
-                        finish()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Failed to save user data. Please try again.", Toast.LENGTH_LONG).show()
-                        auth.signOut()
-                    }
             }
     }
 }

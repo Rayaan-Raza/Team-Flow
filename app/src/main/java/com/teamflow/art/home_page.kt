@@ -55,6 +55,7 @@ class home_page : AppCompatActivity() {
             val i = Intent(this, project_detail::class.java)
             i.putExtra("projectId", pid)
             startActivity(i)
+            overridePendingTransition(0, 0)
         }
 
         rvTasks.adapter = projectsAdapter
@@ -65,15 +66,49 @@ class home_page : AppCompatActivity() {
         btnNewTask.setOnClickListener {
             // For now: create project
             startActivity(Intent(this, add_edit_project::class.java))
+            overridePendingTransition(0, 0)
         }
 
         navHome.setOnClickListener { }
         navProjects.setOnClickListener {
             Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
         }
+
+
+
+        bottomNav()
+    }
+
+
+    fun bottomNav(){
+        navHome = findViewById(R.id.navHome)
+        navProjects = findViewById(R.id.navProjects)
+        navCalendar = findViewById(R.id.navCalendar)
+        navInbox = findViewById(R.id.navInbox)
+        navProfile = findViewById(R.id.navProfile)
+
         navCalendar.setOnClickListener { Toast.makeText(this, "Calendar", Toast.LENGTH_SHORT).show() }
         navInbox.setOnClickListener { Toast.makeText(this, "Inbox", Toast.LENGTH_SHORT).show() }
-        navProfile.setOnClickListener { Toast.makeText(this, "Profile", Toast.LENGTH_SHORT).show() }
+        navProfile.setOnClickListener{
+            startActivity(Intent(this, profile_screen::class.java))
+            overridePendingTransition(0,0)
+            finish()
+        }
+
+        navHome.setOnClickListener {
+            startActivity(Intent(this, home_page::class.java))
+            overridePendingTransition(0,0)
+            finish()
+        }
+
+        navProjects.setOnClickListener {
+            //project list
+            Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
+           // startActivity(Intent(this, project_list::class.java))
+            //overridePendingTransition(0,0)
+            //finish()
+        }
+
     }
 
     override fun onResume() {
@@ -87,11 +122,17 @@ class home_page : AppCompatActivity() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             startActivity(Intent(this, Sign_in::class.java))
+            overridePendingTransition(0, 0)
             finish()
         }
     }
 
     private fun loadUserName() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val uid = auth.currentUser?.uid ?: return
         dbRef.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
@@ -104,6 +145,11 @@ class home_page : AppCompatActivity() {
     }
 
     private fun loadAssignedProjects() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val uid = auth.currentUser?.uid ?: return
 
         dbRef.child("userProjects").child(uid).get()
@@ -141,4 +187,6 @@ class home_page : AppCompatActivity() {
                 Toast.makeText(this, "Failed to load projects", Toast.LENGTH_SHORT).show()
             }
     }
+
+
 }

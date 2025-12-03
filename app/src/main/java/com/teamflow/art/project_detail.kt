@@ -65,6 +65,7 @@ class project_detail : AppCompatActivity() {
             val i = Intent(this, add_edit_project::class.java)
             i.putExtra("projectId", projectId)
             startActivity(i)
+            overridePendingTransition(0, 0)
         }
 
         refreshAll()
@@ -98,6 +99,7 @@ class project_detail : AppCompatActivity() {
             i.putExtra("projectId", pid)
             i.putExtra("taskId", task.id)
             startActivity(i)
+            overridePendingTransition(0, 0)
         }
 
         rvTasks.layoutManager = LinearLayoutManager(this)
@@ -105,6 +107,11 @@ class project_detail : AppCompatActivity() {
     }
 
     private fun refreshAll() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val pid = projectId ?: return
         loadProject(pid)
         loadTasks(pid)

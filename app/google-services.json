@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "821552096000",
+    "firebase_url": "https://team-flow-1f54f-default-rtdb.firebaseio.com",
     "project_id": "team-flow-1f54f",
     "storage_bucket": "team-flow-1f54f.firebasestorage.app"
   },

@@ -56,12 +56,14 @@
             android:layout_width="100dp"
             android:layout_height="100dp">
 
-            <ImageView
+            <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/imgProfile"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
                 android:src="@drawable/ic_avatar"
                 android:scaleType="centerCrop"
+                app:civ_border_width="1dp"
+                app:civ_border_color="#FF000000"
                  />
 
             <ImageButton
@@ -245,7 +247,7 @@
 
         <!-- Favorites -->
         <LinearLayout
-            android:id="@+id/btnFavorites"
+            android:id="@+id/btnEditProfile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -261,7 +263,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Favorites"
+                android:text="Edit Profile"
                 android:textColor="@color/black"
                 android:textSize="15sp"
                 android:layout_marginStart="12dp" />
@@ -318,6 +320,7 @@
 
         <!-- Home -->
         <LinearLayout
+            android:id="@+id/navHome"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -332,6 +335,7 @@
 
         <!-- Project (Selected) -->
         <LinearLayout
+            android:id="@+id/navProjects"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -346,6 +350,7 @@
 
         <!-- Calendar -->
         <LinearLayout
+            android:id="@+id/navCalendar"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -360,6 +365,7 @@
 
         <!-- Inbox -->
         <LinearLayout
+            android:id="@+id/navInbox"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -374,6 +380,7 @@
 
         <!-- Profile -->
         <LinearLayout
+            android:id="@+id/navProfile"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

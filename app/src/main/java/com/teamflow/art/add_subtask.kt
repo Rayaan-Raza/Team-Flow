@@ -83,6 +83,11 @@ class add_subtask : AppCompatActivity() {
     }
 
     private fun refresh() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val pid = projectId ?: return
         val tid = taskId ?: return
         val sid = subTaskId ?: return
@@ -160,6 +165,11 @@ class add_subtask : AppCompatActivity() {
     // ===================== COMPLETION LOGIC (SUBTASK) =====================
 
     private fun markSubTaskCompleteForMe() {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val pid = projectId ?: return
         val tid = taskId ?: return
         val sid = subTaskId ?: return

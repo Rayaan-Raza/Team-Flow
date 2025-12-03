@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/greybg"
     android:paddingTop="15dp"
+    android:id="@+id/main"
     tools:context=".task_list">
 
     <!-- ========= TOP BAR ========= -->

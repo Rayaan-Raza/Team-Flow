@@ -26,6 +26,7 @@ class Success : AppCompatActivity() {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             startActivity(intent)
+            overridePendingTransition(0, 0)
             finish()
         }
     }

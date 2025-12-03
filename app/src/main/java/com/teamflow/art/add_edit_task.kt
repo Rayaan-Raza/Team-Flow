@@ -145,6 +145,11 @@ class add_edit_task : AppCompatActivity() {
     }
 
     private fun loadMembers(pid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         dbRef.child("projectMembers").child(pid).get()
             .addOnSuccessListener { snap ->
                 val uids = snap.children.mapNotNull { it.key }
@@ -178,6 +183,11 @@ class add_edit_task : AppCompatActivity() {
     }
 
     private fun loadTaskForEdit(pid: String, tid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         dbRef.child("projectTasks").child(pid).child(tid).get()
             .addOnSuccessListener { snap ->
                 etTitle.setText(snap.child("title").getValue(String::class.java) ?: "")
@@ -219,6 +229,11 @@ class add_edit_task : AppCompatActivity() {
     private fun defaultAssignees(uid: String): Map<String, Any> = mapOf(uid to true)
 
     private fun createTask(pid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val uid = currentUid ?: run {
             Toast.makeText(this, "Login required", Toast.LENGTH_SHORT).show()
             return
@@ -283,6 +298,11 @@ class add_edit_task : AppCompatActivity() {
     }
 
     private fun updateTask(pid: String, tid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val uid = currentUid ?: ""
 
         val title = etTitle.text.toString().trim()

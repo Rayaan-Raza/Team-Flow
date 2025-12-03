@@ -40,10 +40,12 @@ class Sign_in : AppCompatActivity() {
 
         tvSignup.setOnClickListener {
             startActivity(Intent(this, Create_account::class.java))
+            overridePendingTransition(0, 0)
         }
 
         tvForgot.setOnClickListener {
             startActivity(Intent(this, forgot_password::class.java))
+            overridePendingTransition(0, 0)
         }
     }
 
@@ -113,9 +115,10 @@ class Sign_in : AppCompatActivity() {
     }
 
     private fun goToHome() {
-        val intent = Intent(this, home_page::class.java)
+        val intent = Intent(this, settings_main::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
+        overridePendingTransition(0, 0)
         finish()
     }
 

@@ -151,6 +151,11 @@ class add_edit_project : AppCompatActivity() {
 
     // ---------- CREATE ----------
     private fun createProject(creatorUid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val name = etTitle.text.toString().trim()
         val desc = etDesc.text.toString().trim()
 
@@ -218,6 +223,11 @@ class add_edit_project : AppCompatActivity() {
 
     // ---------- LOAD FOR EDIT ----------
     private fun loadProjectForEdit(projectId: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         // load main project
         dbRef.child("projects").child(projectId).get()
             .addOnSuccessListener { snap ->
@@ -292,6 +302,11 @@ class add_edit_project : AppCompatActivity() {
 
     // ---------- UPDATE ----------
     private fun updateProject(projectId: String, editorUid: String) {
+        if (!NetworkUtils.isInternetAvailable(this)) {
+            startActivity(Intent(this, No_Internet_Connection::class.java))
+            overridePendingTransition(0, 0)
+            return
+        }
         val name = etTitle.text.toString().trim()
         val desc = etDesc.text.toString().trim()
 

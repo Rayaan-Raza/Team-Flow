@@ -27,6 +27,7 @@ class splash_screen : AppCompatActivity() {
 
             next.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(next)
+            overridePendingTransition(0, 0)
             finish()
 
         }, 5000)
