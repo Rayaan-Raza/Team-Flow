@@ -117,6 +117,9 @@
             android:name=".add_edit_task"
             android:exported="false" />
         <activity
+            android:name=".EditProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
         </activity>
