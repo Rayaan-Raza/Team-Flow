@@ -115,7 +115,7 @@ class Sign_in : AppCompatActivity() {
     }
 
     private fun goToHome() {
-        val intent = Intent(this, settings_main::class.java)
+        val intent = Intent(this, home_page::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
         overridePendingTransition(0, 0)
