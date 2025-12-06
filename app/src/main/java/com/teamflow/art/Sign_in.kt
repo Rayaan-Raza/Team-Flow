@@ -99,6 +99,16 @@ class Sign_in : AppCompatActivity() {
 
                 if (task.isSuccessful) {
                     if (cbRemember.isChecked) saveUser(email, password) else clearUser()
+                    
+                    // Save user data to session
+                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    loadUserDataAndSave(uid)
+                    
+                    // Register FCM token
+                    FcmTokenManager.registerToken(this, uid)
+                    
+                    // Mark account exists on device
+                    UserSession.markAccountExists(this)
 
                     Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
                     goToHome()
@@ -145,5 +155,16 @@ class Sign_in : AppCompatActivity() {
     private fun clearUser() {
         val prefs = getSharedPreferences("teamflow_prefs", Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
+    }
+    
+    private fun loadUserDataAndSave(uid: String) {
+        val dbRef = com.google.firebase.database.FirebaseDatabase.getInstance().reference
+        dbRef.child("users").child(uid).get()
+            .addOnSuccessListener { snapshot ->
+                val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                val email = snapshot.child("email").getValue(String::class.java) ?: ""
+                val photoUrl = snapshot.child("photoUrl").getValue(String::class.java)
+                UserSession.saveUser(this, uid, name, email, photoUrl)
+            }
     }
 }

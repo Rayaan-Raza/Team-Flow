@@ -22,7 +22,6 @@ class home_page : AppCompatActivity() {
     private lateinit var btnNewTask: Button
     private lateinit var rvTasks: RecyclerView
 
-    // Bottom navigation
     private lateinit var navHome: LinearLayout
     private lateinit var navProjects: LinearLayout
     private lateinit var navCalendar: LinearLayout
@@ -31,6 +30,7 @@ class home_page : AppCompatActivity() {
 
     private lateinit var projectsAdapter: ProjectsAdapter
     private val projectList = mutableListOf<Project>()
+    private val realtimeListeners = RealtimeListeners()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,40 +42,31 @@ class home_page : AppCompatActivity() {
         tvUpcomingCount = findViewById(R.id.tvUpcomingCount)
         btnNewTask = findViewById(R.id.btnNewTask)
         rvTasks = findViewById(R.id.rvTasks)
-
-        navHome = findViewById(R.id.navHome)
-        navProjects = findViewById(R.id.navProjects)
-        navCalendar = findViewById(R.id.navCalendar)
-        navInbox = findViewById(R.id.navInbox)
-        navProfile = findViewById(R.id.navProfile)
-
-        rvTasks.layoutManager = LinearLayoutManager(this)
-        projectsAdapter = ProjectsAdapter(projectList) { project ->
-            val pid = project.id ?: return@ProjectsAdapter
-            val i = Intent(this, project_detail::class.java)
-            i.putExtra("projectId", pid)
-            startActivity(i)
+        
+        // Notification bell button
+        val ivBell = findViewById<android.widget.ImageView>(R.id.ivBell)
+        ivBell.setOnClickListener {
+            startActivity(Intent(this, inbox_all::class.java))
             overridePendingTransition(0, 0)
         }
 
+        // Initialize RecyclerView and adapter
+        rvTasks.layoutManager = LinearLayoutManager(this)
+        projectsAdapter = ProjectsAdapter(projectList) { project ->
+            val pid = project.id ?: return@ProjectsAdapter
+            val intent = Intent(this, project_detail::class.java)
+            intent.putExtra("projectId", pid)
+            startActivity(intent)
+            overridePendingTransition(0, 0)
+        }
         rvTasks.adapter = projectsAdapter
 
-        loadUserName()
-        loadAssignedProjects()
-
         btnNewTask.setOnClickListener {
-            // For now: create project
             startActivity(Intent(this, add_edit_project::class.java))
             overridePendingTransition(0, 0)
         }
 
-        navHome.setOnClickListener { }
-        navProjects.setOnClickListener {
-            Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
-        }
-
-
-
+        // Setup bottom navigation
         bottomNav()
     }
 
@@ -87,8 +78,18 @@ class home_page : AppCompatActivity() {
         navInbox = findViewById(R.id.navInbox)
         navProfile = findViewById(R.id.navProfile)
 
-        navCalendar.setOnClickListener { Toast.makeText(this, "Calendar", Toast.LENGTH_SHORT).show() }
-        navInbox.setOnClickListener { Toast.makeText(this, "Inbox", Toast.LENGTH_SHORT).show() }
+        navCalendar.setOnClickListener { 
+            startActivity(Intent(this, calendar_screen::class.java))
+            overridePendingTransition(0,0)
+            finish()
+        }
+        
+        navInbox.setOnClickListener { 
+            startActivity(Intent(this, inbox_all::class.java))
+            overridePendingTransition(0,0)
+            finish()
+        }
+        
         navProfile.setOnClickListener{
             startActivity(Intent(this, profile_screen::class.java))
             overridePendingTransition(0,0)
@@ -96,17 +97,13 @@ class home_page : AppCompatActivity() {
         }
 
         navHome.setOnClickListener {
-            startActivity(Intent(this, home_page::class.java))
-            overridePendingTransition(0,0)
-            finish()
+            // Already on home, do nothing
         }
 
         navProjects.setOnClickListener {
-            //project list
-            Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
-           // startActivity(Intent(this, project_list::class.java))
-            //overridePendingTransition(0,0)
-            //finish()
+            startActivity(Intent(this, project_list::class.java))
+            overridePendingTransition(0,0)
+            finish()
         }
 
     }
@@ -124,6 +121,16 @@ class home_page : AppCompatActivity() {
             startActivity(Intent(this, Sign_in::class.java))
             overridePendingTransition(0, 0)
             finish()
+            return
+        }
+        
+        // Load user name from UserSession
+        val userName = UserSession.getName(this)
+        tvHello.text = if (!userName.isNullOrEmpty()) "Hi, $userName" else "Hi,"
+        
+        // Load user name from Firebase if not in session
+        if (userName.isNullOrEmpty()) {
+            loadUserName()
         }
     }
 

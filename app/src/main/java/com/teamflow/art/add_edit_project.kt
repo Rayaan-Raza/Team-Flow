@@ -79,7 +79,13 @@ class add_edit_project : AppCompatActivity() {
         btnAddTask.setOnClickListener { tasksAdapter.addEmptyTask() }
 
         btnAddAssignee.setOnClickListener {
-            Toast.makeText(this, "Assign/edit team later (edit_team)", Toast.LENGTH_SHORT).show()
+            // Open user picker dialog
+            val currentUids = assignees.map { it.uid ?: "" }
+            UserPickerDialog(this, currentUids) { selectedUsers ->
+                assignees.clear()
+                assignees.addAll(selectedUsers)
+                assigneesAdapter.notifyDataSetChanged()
+            }.show()
         }
 
         btnSave.setOnClickListener {
@@ -146,6 +152,8 @@ class add_edit_project : AppCompatActivity() {
             cal.get(Calendar.MONTH),
             cal.get(Calendar.DAY_OF_MONTH)
         )
+        // Set minimum date to today
+        dialog.datePicker.minDate = System.currentTimeMillis()
         dialog.show()
     }
 
@@ -163,6 +171,13 @@ class add_edit_project : AppCompatActivity() {
             etTitle.error = "Required"
             etTitle.requestFocus()
             Toast.makeText(this, "Project title is required", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Validate completion date
+        if (dueAtMillis == null) {
+            Toast.makeText(this, "Please select a completion date", Toast.LENGTH_SHORT).show()
+            tvDueDate.requestFocus()
             return
         }
 
@@ -208,6 +223,8 @@ class add_edit_project : AppCompatActivity() {
                 "createdAt" to now,
                 "updatedAt" to now
             )
+            // Automatically assign creator to task
+            updates["projectTasks/$projectId/$taskId/collaborators/$creatorUid"] = true
         }
 
         dbRef.updateChildren(updates)

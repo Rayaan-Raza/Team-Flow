@@ -50,17 +50,25 @@ class profile_screen : AppCompatActivity() {
 
         // Menu Options
         findViewById<LinearLayout>(R.id.btnMyTask).setOnClickListener {
-            startActivity(Intent(this, task_list::class.java))
+            // Navigate to My Tasks - shows all tasks assigned to current user
+            val intent = Intent(this, my_tasks::class.java)
+            startActivity(intent)
             overridePendingTransition(0, 0)
         }
 
         findViewById<LinearLayout>(R.id.btnMyProject).setOnClickListener {
-             Toast.makeText(this, "My Projects clicked", Toast.LENGTH_SHORT).show()
+            // Navigate to My Projects - shows all projects user is part of
+            val intent = Intent(this, project_list::class.java)
+            startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
         // Reports / Analytics
         findViewById<LinearLayout>(R.id.btnReportAnalytics).setOnClickListener {
-             Toast.makeText(this, "Reports clicked", Toast.LENGTH_SHORT).show()
+            // Navigate to Analytics - shows completion stats and charts
+            val intent = Intent(this, analytics_screen::class.java)
+            startActivity(intent)
+            overridePendingTransition(0, 0)
         }
 
         // Edit Profile (Menu Option)
@@ -81,9 +89,15 @@ class profile_screen : AppCompatActivity() {
         }
 
         // Bottom Navigation
-        bottomNav()
+        BottomNavHelper.setupBottomNav(this, BottomNavHelper.NavItem.PROFILE)
 
-        // Load Data
+        // Load Data from UserSession first
+        val userName = UserSession.getName(this)
+        if (!userName.isNullOrEmpty()) {
+            tvUsername.text = userName
+        }
+        
+        // Then load from Firebase (will update if different)
         loadUserData()
 
         imgProfile.setOnClickListener {
@@ -148,6 +162,10 @@ class profile_screen : AppCompatActivity() {
                 val name = snapshot.child("name").getValue(String::class.java)
                 if (name != null) {
                     tvUsername.text = name
+                    // Update UserSession
+                    UserSession.saveUser(this@profile_screen, uid, name, 
+                        snapshot.child("email").getValue(String::class.java) ?: "",
+                        snapshot.child("photoUrl").getValue(String::class.java))
                 }
                 
                 val photoBase64 = snapshot.child("photoBase64").getValue(String::class.java)
@@ -166,36 +184,5 @@ class profile_screen : AppCompatActivity() {
                 Toast.makeText(this@profile_screen, "Failed to load profile", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    fun bottomNav(){
-        navHome = findViewById(R.id.navHome)
-        navProjects = findViewById(R.id.navProjects)
-        navCalendar = findViewById(R.id.navCalendar)
-        navInbox = findViewById(R.id.navInbox)
-        navProfile = findViewById(R.id.navProfile)
-
-        navCalendar.setOnClickListener { Toast.makeText(this, "Calendar", Toast.LENGTH_SHORT).show() }
-        navInbox.setOnClickListener { Toast.makeText(this, "Inbox", Toast.LENGTH_SHORT).show() }
-        navProfile.setOnClickListener{
-            startActivity(Intent(this, profile_screen::class.java))
-            overridePendingTransition(0,0)
-            finish()
-        }
-
-        navHome.setOnClickListener {
-            startActivity(Intent(this, home_page::class.java))
-            overridePendingTransition(0,0)
-            finish()
-        }
-
-        navProjects.setOnClickListener {
-            //project list
-            Toast.makeText(this, "Projects", Toast.LENGTH_SHORT).show()
-            // startActivity(Intent(this, project_list::class.java))
-            //overridePendingTransition(0,0)
-           // finish()
-        }
-
     }
 }

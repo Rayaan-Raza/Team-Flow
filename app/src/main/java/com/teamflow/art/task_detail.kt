@@ -88,7 +88,25 @@ class task_detail : AppCompatActivity() {
         }
 
         btnAddAssignee.setOnClickListener {
-            Toast.makeText(this, "Assign/edit members later", Toast.LENGTH_SHORT).show()
+            // Open user picker dialog for task assignment
+            val pid = projectId ?: return@setOnClickListener
+            val tid = taskId ?: return@setOnClickListener
+            
+            // Get current assignees
+            dbRef.child("projectTasks").child(pid).child(tid).child("collaborators").get()
+                .addOnSuccessListener { snap ->
+                    val currentUids = snap.children.mapNotNull { it.key }
+                    UserPickerDialog(this, currentUids) { selectedUsers ->
+                        // Update task collaborators
+                        val collaboratorsMap = selectedUsers.associate { it.uid!! to true }
+                        dbRef.child("projectTasks").child(pid).child(tid).child("collaborators")
+                            .setValue(collaboratorsMap)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Assignees updated", Toast.LENGTH_SHORT).show()
+                                refreshAll()
+                            }
+                    }.show()
+                }
         }
 
         btnMarkDone.setOnClickListener { markTaskDoneForMe() }

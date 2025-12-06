@@ -6,30 +6,79 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class splash_screen : AppCompatActivity() {
+    
+    private lateinit var auth: FirebaseAuth
+    private val dbRef = FirebaseDatabase.getInstance().reference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
-        supportActionBar?.hide()
-
-        val auth = FirebaseAuth.getInstance()
-
-        // Keep 5 seconds as you requested
+        
+        auth = FirebaseAuth.getInstance()
+        
+        // Delay for splash screen effect
         Handler(Looper.getMainLooper()).postDelayed({
-
-            val next = if (auth.currentUser != null) {
-                Intent(this, home_page::class.java)
-            } else {
-                Intent(this, Create_account::class.java)
+            checkAuthenticationStatus()
+        }, 2000)
+    }
+    
+    private fun checkAuthenticationStatus() {
+        val currentUser = auth.currentUser
+        
+        when {
+            // Case 1: User is logged in
+            currentUser != null -> {
+                loadUserDataAndNavigateHome(currentUser.uid)
             }
-
-            next.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(next)
-            overridePendingTransition(0, 0)
-            finish()
-
-        }, 5000)
+            // Case 2: Account exists on device but not logged in
+            UserSession.hasAccount(this) -> {
+                navigateToSignIn()
+            }
+            // Case 3: No account ever created on this device
+            else -> {
+                navigateToCreateAccount()
+            }
+        }
+    }
+    
+    private fun loadUserDataAndNavigateHome(uid: String) {
+        // Load user data from Firebase
+        dbRef.child("users").child(uid).get()
+            .addOnSuccessListener { snapshot ->
+                val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                val email = snapshot.child("email").getValue(String::class.java) ?: ""
+                val photoUrl = snapshot.child("photoUrl").getValue(String::class.java)
+                
+                // Save to UserSession
+                UserSession.saveUser(this, uid, name, email, photoUrl)
+                
+                // Register FCM token
+                FcmTokenManager.registerToken(this, uid)
+                
+                // Navigate to home
+                navigateToHome()
+            }
+            .addOnFailureListener {
+                // If failed to load, still navigate to home
+                navigateToHome()
+            }
+    }
+    
+    private fun navigateToHome() {
+        startActivity(Intent(this, home_page::class.java))
+        finish()
+    }
+    
+    private fun navigateToSignIn() {
+        startActivity(Intent(this, Sign_in::class.java))
+        finish()
+    }
+    
+    private fun navigateToCreateAccount() {
+        startActivity(Intent(this, Create_account::class.java))
+        finish()
     }
 }

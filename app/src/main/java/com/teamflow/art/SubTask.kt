@@ -1,14 +1,21 @@
 package com.teamflow.art
 
 data class SubTask(
-    var id: String? = null,
-    var projectId: String? = null,
-    var taskId: String? = null,
+    val id: String? = null,
+    val taskId: String? = null,
+    val projectId: String? = null,
 
-    var title: String? = null,
-    var hours: Int? = 0,
-    var status: String? = "in_progress",
+    val title: String? = null,
+    val isCompleted: Boolean? = false,
+    val assigneeUid: String? = null,
+    
+    // Time duration in hours
+    val durationHours: Int? = null,
 
-    var createdAt: Long? = null,
-    var updatedAt: Long? = null
+    val createdAt: Long? = null,
+    val updatedAt: Long? = null,
+    
+    // Collaborators - multiple users can be assigned
+    val collaborators: Map<String, Boolean>? = null,  // uid -> true
+    val isSynced: Boolean? = true  // For offline sync tracking
 )

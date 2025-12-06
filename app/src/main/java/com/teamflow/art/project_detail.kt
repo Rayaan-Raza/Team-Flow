@@ -138,6 +138,18 @@ class project_detail : AppCompatActivity() {
                 } else {
                     tvDue.text = "Due date: Not set"
                 }
+                
+                // Load creator name
+                val creatorUid = p.createdBy
+                if (creatorUid != null) {
+                    dbRef.child("users").child(creatorUid).child("name").get()
+                        .addOnSuccessListener { nameSnap ->
+                            val creatorName = nameSnap.getValue(String::class.java)
+                            if (creatorName != null) {
+                                // Update any UI showing creator name if needed
+                            }
+                        }
+                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load project", Toast.LENGTH_SHORT).show()

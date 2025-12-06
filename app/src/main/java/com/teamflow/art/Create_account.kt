@@ -127,13 +127,36 @@ class Create_account : AppCompatActivity() {
                 }
 
                 val user = mapOf(
-                    "id" to uid,
+                    "uid" to uid,
                     "name" to name,
                     "email" to email,
                     "photoUrl" to null,
                     "createdAt" to System.currentTimeMillis()
                 )
 
+                val dbRef = FirebaseDatabase.getInstance().reference
+                dbRef.child("users").child(uid).setValue(user)
+                    .addOnSuccessListener {
+                        // Save to UserSession
+                        UserSession.saveUser(this, uid, name, email, null)
+                        
+                        // Mark account exists on device
+                        UserSession.markAccountExists(this)
+                        
+                        // Register FCM token
+                        FcmTokenManager.registerToken(this, uid)
+                        
+                        Toast.makeText(this, "Account created successfully", Toast.LENGTH_SHORT).show()
+                        
+                        // Navigate to home
+                        val intent = Intent(this, home_page::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        finish()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Failed to save user data: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
             }
     }
 }
