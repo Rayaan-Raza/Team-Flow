@@ -7,6 +7,9 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class splash_screen : AppCompatActivity() {
     
@@ -63,6 +66,11 @@ class splash_screen : AppCompatActivity() {
                 
                 // Register FCM token
                 FcmTokenManager.registerToken(this, uid)
+                
+                // Send welcome notification
+                CoroutineScope(Dispatchers.IO).launch {
+                    NotificationHelper.notifyWelcome(uid, name.ifEmpty { "there" })
+                }
                 
                 // Navigate to home
                 navigateToHome()

@@ -12,8 +12,8 @@ import java.net.URL
  */
 object NotificationHelper {
     
-    // TODO: Replace with your Vercel deployment URL after deploying
-    private const val VERCEL_URL = "https://your-project.vercel.app"
+    // Vercel deployment URL for push notifications
+    private const val VERCEL_URL = "https://team-flow-five.vercel.app"
     
     /**
      * Send notification to a user by their Firebase UID
@@ -89,6 +89,19 @@ object NotificationHelper {
             body = "$completedByName completed: $taskTitle",
             type = "task_done",
             data = mapOf("taskId" to taskId, "completedBy" to completedByName)
+        )
+    }
+    
+    /**
+     * Send welcome notification to new users
+     */
+    suspend fun notifyWelcome(uid: String, userName: String): Boolean {
+        return notifyUser(
+            uid = uid,
+            title = "Welcome to TeamFlow! 🎉",
+            body = "Hi $userName! Start collaborating with your team today.",
+            type = "welcome",
+            data = mapOf("userName" to userName)
         )
     }
 }
