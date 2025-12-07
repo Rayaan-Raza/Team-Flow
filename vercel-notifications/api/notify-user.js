@@ -5,7 +5,8 @@ let app;
 try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://team-flow-1f54f-default-rtdb.firebaseio.com'
     });
 } catch (e) {
     // Already initialized
@@ -50,11 +51,12 @@ module.exports = async (req, res) => {
         }
 
         // Get user's FCM token from Firebase RTDB
+        // Token is stored at users/{uid}/fcmToken by the Android app
         const db = admin.database();
-        const snapshot = await db.ref(`fcmTokens/${uid}`).once('value');
-        const tokenData = snapshot.val();
+        const snapshot = await db.ref(`users/${uid}/fcmToken`).once('value');
+        const fcmToken = snapshot.val();
 
-        if (!tokenData || !tokenData.token) {
+        if (!fcmToken) {
             return res.status(404).json({
                 success: false,
                 error: 'FCM token not found for user'
@@ -62,7 +64,7 @@ module.exports = async (req, res) => {
         }
 
         const message = {
-            token: tokenData.token,
+            token: fcmToken,
             notification: {
                 title: title,
                 body: body
