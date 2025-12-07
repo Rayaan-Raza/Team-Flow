@@ -186,7 +186,15 @@ class message : AppCompatActivity() {
         scope.launch {
             try {
                 val success = sendMessageToApi(messageId, convId, currentUid, text, imageBase64, timestamp)
-                if (!success) {
+                if (success) {
+                    // Send push notification to receiver
+                    val receiverUid = otherUserId
+                    val senderName = UserSession.getName(this@message) ?: "Someone"
+                    val preview = if (imageBase64 != null) "📷 Image" else text
+                    if (!receiverUid.isNullOrEmpty()) {
+                        NotificationHelper.notifyNewMessage(receiverUid, senderName, preview)
+                    }
+                } else {
                     Toast.makeText(this@message, "Failed to send message", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {

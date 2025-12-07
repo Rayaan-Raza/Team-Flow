@@ -1,0 +1,12 @@
+{
+    "name": "teamflow-notifications",
+    "version": "1.0.0",
+    "description": "TeamFlow Push Notification Service",
+    "main": "api/send-notification.js",
+    "scripts": {
+        "dev": "vercel dev"
+    },
+    "dependencies": {
+        "firebase-admin": "^12.0.0"
+    }
+}
