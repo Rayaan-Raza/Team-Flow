@@ -88,13 +88,28 @@
                 android:layout_marginTop="16dp"
                 android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Assigned to"
-                    android:textStyle="bold"
-                    android:textSize="15sp"
-                    android:textColor="@color/black" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Assigned to"
+                        android:textStyle="bold"
+                        android:textSize="15sp"
+                        android:textColor="@color/black" />
+
+                    <ImageView
+                        android:id="@+id/btnAddAssignee"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/add_dotted"
+                        android:contentDescription="Add assignee" />
+                </LinearLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvMembers"

@@ -208,8 +208,25 @@ class add_edit_project : AppCompatActivity() {
 
         val updates = hashMapOf<String, Any?>()
         updates["projects/$projectId"] = project
+        
+        // DEBUG: Log assignees list
+        android.util.Log.d("CREATE_PROJECT", "Assignees count: ${assignees.size}")
+        assignees.forEach { a -> android.util.Log.d("CREATE_PROJECT", "Assignee UID: ${a.uid}") }
+        
+        // Always add creator first
         updates["userProjects/$creatorUid/$projectId"] = true
         updates["projectMembers/$projectId/$creatorUid/role"] = "creator"
+        
+        // Add other assignees (skip creator since already added)
+        for (a in assignees) {
+            val memberUid = a.uid ?: continue
+            android.util.Log.d("CREATE_PROJECT", "Processing assignee: $memberUid (is creator: ${memberUid == creatorUid})")
+            if (memberUid != creatorUid) {
+                updates["userProjects/$memberUid/$projectId"] = true
+                updates["projectMembers/$projectId/$memberUid/role"] = "member"
+                android.util.Log.d("CREATE_PROJECT", "Added member to project: $memberUid")
+            }
+        }
 
         for (t in tasks) {
             val taskId = dbRef.child("projectTasks").child(projectId).push().key ?: continue
@@ -221,20 +238,27 @@ class add_edit_project : AppCompatActivity() {
                 "status" to "in_progress",
                 "createdBy" to creatorUid,
                 "createdAt" to now,
-                "updatedAt" to now
+                "updatedAt" to now,
+                "collaborators" to mapOf(creatorUid to true)  // Include collaborators in the map
             )
-            // Automatically assign creator to task
-            updates["projectTasks/$projectId/$taskId/collaborators/$creatorUid"] = true
         }
 
+        // DEBUG: Log what we're sending
+        Toast.makeText(this, "DEBUG: Saving project $projectId for user $creatorUid", Toast.LENGTH_LONG).show()
+        android.util.Log.d("CREATE_PROJECT", "Updates map keys: ${updates.keys}")
+        android.util.Log.d("CREATE_PROJECT", "Project status: ${project.status}")
+        android.util.Log.d("CREATE_PROJECT", "userProjects path: userProjects/$creatorUid/$projectId")
+        
         dbRef.updateChildren(updates)
             .addOnSuccessListener {
-                Toast.makeText(this, "Project created", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "DEBUG: Project saved to Firebase successfully! ID: $projectId", Toast.LENGTH_LONG).show()
+                android.util.Log.d("CREATE_PROJECT", "SUCCESS - Project created: $projectId")
                 startActivity(Intent(this, home_page::class.java))
                 finish()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, e.localizedMessage ?: "Failed to save", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "DEBUG FAILURE: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                android.util.Log.e("CREATE_PROJECT", "FAILED: ${e.message}", e)
             }
     }
 
@@ -402,14 +426,63 @@ class add_edit_project : AppCompatActivity() {
 
                 updates["projects/$projectId/tasksTotal"] = total
                 updates["projects/$projectId/tasksDone"] = done
+                
+                // -------- UPDATE MEMBERS --------
+                // Get current assignees UIDs
+                val currentAssigneeUids = assignees.mapNotNull { it.uid }.toSet()
+                android.util.Log.d("UPDATE_PROJECT", "Current assignees: $currentAssigneeUids")
+                
+                // Fetch existing members and update
+                dbRef.child("projectMembers").child(projectId).get()
+                    .addOnSuccessListener { membersSnap ->
+                        val existingMemberUids = membersSnap.children.mapNotNull { it.key }.toSet()
+                        android.util.Log.d("UPDATE_PROJECT", "Existing members: $existingMemberUids")
+                        
+                        // Find the creator (we don't want to remove them)
+                        var creatorUid: String? = null
+                        for (m in membersSnap.children) {
+                            val role = m.child("role").getValue(String::class.java)
+                            if (role == "creator") {
+                                creatorUid = m.key
+                                break
+                            }
+                        }
+                        
+                        // Add new members (those in current but not in existing)
+                        for (uid in currentAssigneeUids) {
+                            if (!existingMemberUids.contains(uid)) {
+                                updates["userProjects/$uid/$projectId"] = true
+                                updates["projectMembers/$projectId/$uid/role"] = "member"
+                                android.util.Log.d("UPDATE_PROJECT", "Adding new member: $uid")
+                            }
+                        }
+                        
+                        // Remove old members (those in existing but not in current, except creator)
+                        for (uid in existingMemberUids) {
+                            if (!currentAssigneeUids.contains(uid) && uid != creatorUid) {
+                                updates["userProjects/$uid/$projectId"] = null
+                                updates["projectMembers/$projectId/$uid"] = null
+                                android.util.Log.d("UPDATE_PROJECT", "Removing member: $uid")
+                            }
+                        }
+                        
+                        // Make sure creator is always in the list
+                        if (creatorUid != null && !currentAssigneeUids.contains(creatorUid)) {
+                            updates["userProjects/$creatorUid/$projectId"] = true
+                            updates["projectMembers/$projectId/$creatorUid/role"] = "creator"
+                        }
 
-                dbRef.updateChildren(updates)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Project updated", Toast.LENGTH_SHORT).show()
-                        finish() // go back to project_detail/home
+                        dbRef.updateChildren(updates)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Project updated", Toast.LENGTH_SHORT).show()
+                                finish() // go back to project_detail/home
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, e.localizedMessage ?: "Update failed", Toast.LENGTH_LONG).show()
+                            }
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, e.localizedMessage ?: "Update failed", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, e.localizedMessage ?: "Failed to load members", Toast.LENGTH_LONG).show()
                     }
             }
             .addOnFailureListener { e ->

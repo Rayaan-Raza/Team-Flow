@@ -18,41 +18,59 @@ class RealtimeListeners {
         val key = "projects_$uid"
         val dbRef = FirebaseDatabase.getInstance().reference
         
+        android.util.Log.d("REALTIME_LISTENER", "attachProjectsListener called for uid: $uid")
+        
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val projects = mutableListOf<Project>()
+                android.util.Log.d("REALTIME_LISTENER", "onDataChange triggered! snapshot exists: ${snapshot.exists()}")
                 
-                // Get user's project IDs
-                dbRef.child("userProjects").child(uid).get().addOnSuccessListener { userProjectsSnap ->
-                    val projectIds = userProjectsSnap.children.mapNotNull { it.key }
-                    
-                    if (projectIds.isEmpty()) {
-                        callback(emptyList())
-                        return@addOnSuccessListener
-                    }
-                    
-                    var remaining = projectIds.size
-                    for (pid in projectIds) {
-                        dbRef.child("projects").child(pid).get().addOnSuccessListener { pSnap ->
-                            val project = pSnap.getValue(Project::class.java)
-                            if (project != null) {
-                                projects.add(project.copy(id = pid))
-                            }
-                            remaining--
-                            if (remaining == 0) {
-                                callback(projects.sortedByDescending { it.createdAt })
-                            }
+                // Use the snapshot directly - it contains the userProjects data
+                val projectIds = snapshot.children.mapNotNull { it.key }
+                android.util.Log.d("REALTIME_LISTENER", "Found ${projectIds.size} project IDs: $projectIds")
+                
+                if (projectIds.isEmpty()) {
+                    android.util.Log.d("REALTIME_LISTENER", "No project IDs found, returning empty list")
+                    callback(emptyList())
+                    return
+                }
+                
+                val projects = mutableListOf<Project>()
+                var remaining = projectIds.size
+                
+                for (pid in projectIds) {
+                    android.util.Log.d("REALTIME_LISTENER", "Fetching project: $pid")
+                    dbRef.child("projects").child(pid).get().addOnSuccessListener { pSnap ->
+                        android.util.Log.d("REALTIME_LISTENER", "Project $pid fetch success, exists: ${pSnap.exists()}")
+                        val project = pSnap.getValue(Project::class.java)
+                        if (project != null) {
+                            android.util.Log.d("REALTIME_LISTENER", "Project $pid parsed: name=${project.name}, status=${project.status}")
+                            projects.add(project.copy(id = pid))
+                        } else {
+                            android.util.Log.e("REALTIME_LISTENER", "Project $pid is NULL after parsing!")
+                        }
+                        remaining--
+                        if (remaining == 0) {
+                            android.util.Log.d("REALTIME_LISTENER", "All projects fetched. Total: ${projects.size}")
+                            callback(projects.sortedByDescending { it.createdAt })
+                        }
+                    }.addOnFailureListener { e ->
+                        android.util.Log.e("REALTIME_LISTENER", "Failed to fetch project $pid: ${e.message}")
+                        remaining--
+                        if (remaining == 0) {
+                            callback(projects.sortedByDescending { it.createdAt })
                         }
                     }
                 }
             }
             
             override fun onCancelled(error: DatabaseError) {
+                android.util.Log.e("REALTIME_LISTENER", "Listener cancelled: ${error.message}")
                 callback(emptyList())
             }
         }
         
         dbRef.child("userProjects").child(uid).addValueEventListener(listener)
+        android.util.Log.d("REALTIME_LISTENER", "Listener attached to userProjects/$uid")
         listeners[key] = listener
         return key
     }

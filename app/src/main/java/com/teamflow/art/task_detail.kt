@@ -92,13 +92,21 @@ class task_detail : AppCompatActivity() {
             val pid = projectId ?: return@setOnClickListener
             val tid = taskId ?: return@setOnClickListener
             
-            // Get current assignees
-            dbRef.child("projectTasks").child(pid).child(tid).child("collaborators").get()
-                .addOnSuccessListener { snap ->
-                    val currentUids = snap.children.mapNotNull { it.key }
+            // Get task data including createdBy and current collaborators
+            dbRef.child("projectTasks").child(pid).child(tid).get()
+                .addOnSuccessListener { taskSnap ->
+                    val createdBy = taskSnap.child("createdBy").getValue(String::class.java)
+                    val currentUids = taskSnap.child("collaborators").children.mapNotNull { it.key }
+                    
                     UserPickerDialog(this, currentUids) { selectedUsers ->
-                        // Update task collaborators
-                        val collaboratorsMap = selectedUsers.associate { it.uid!! to true }
+                        // Build collaborators map, always including the creator
+                        val collaboratorsMap = selectedUsers.associate { it.uid!! to true }.toMutableMap()
+                        
+                        // Ensure creator is always included
+                        if (createdBy != null && !collaboratorsMap.containsKey(createdBy)) {
+                            collaboratorsMap[createdBy] = true
+                        }
+                        
                         dbRef.child("projectTasks").child(pid).child(tid).child("collaborators")
                             .setValue(collaboratorsMap)
                             .addOnSuccessListener {
@@ -164,7 +172,7 @@ class task_detail : AppCompatActivity() {
         val pid = projectId ?: return
         val tid = taskId ?: return
         loadTask(pid, tid)
-        loadMembers(pid)
+        loadMembers(pid, tid)
         loadSubTasks(pid, tid)
     }
 
@@ -197,10 +205,13 @@ class task_detail : AppCompatActivity() {
             }
     }
 
-    private fun loadMembers(pid: String) {
-        dbRef.child("projectMembers").child(pid).get()
+    private fun loadMembers(pid: String, tid: String) {
+        // Load task collaborators from the correct path
+        dbRef.child("projectTasks").child(pid).child(tid).child("collaborators").get()
             .addOnSuccessListener { snap ->
                 val uids = snap.children.mapNotNull { it.key }
+                android.util.Log.d("TASK_DETAIL", "Loaded ${uids.size} collaborators for task $tid: $uids")
+                
                 if (uids.isEmpty()) {
                     membersAdapter.setMembers(emptyList())
                     return@addOnSuccessListener
@@ -225,6 +236,10 @@ class task_detail : AppCompatActivity() {
                             }
                         }
                 }
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("TASK_DETAIL", "Failed to load collaborators: ${e.message}")
+                membersAdapter.setMembers(emptyList())
             }
     }
 

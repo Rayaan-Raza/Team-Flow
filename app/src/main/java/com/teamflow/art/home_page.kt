@@ -31,6 +31,7 @@ class home_page : AppCompatActivity() {
     private lateinit var projectsAdapter: ProjectsAdapter
     private val projectList = mutableListOf<Project>()
     private val realtimeListeners = RealtimeListeners()
+    private var projectsListenerKey: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +47,7 @@ class home_page : AppCompatActivity() {
         // Notification bell button
         val ivBell = findViewById<android.widget.ImageView>(R.id.ivBell)
         ivBell.setOnClickListener {
-            startActivity(Intent(this, inbox_all::class.java))
+            startActivity(Intent(this, notifications_fill::class.java))
             overridePendingTransition(0, 0)
         }
 
@@ -110,13 +111,19 @@ class home_page : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadAssignedProjects()
+        startProjectsListener()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        projectsListenerKey?.let { realtimeListeners.detachListener(it) }
     }
 
 
     override fun onStart() {
         super.onStart()
         val currentUser = auth.currentUser
+        startProjectsListener()
         if (currentUser == null) {
             startActivity(Intent(this, Sign_in::class.java))
             overridePendingTransition(0, 0)
@@ -151,7 +158,7 @@ class home_page : AppCompatActivity() {
             }
     }
 
-    private fun loadAssignedProjects() {
+    private fun startProjectsListener() {
         if (!NetworkUtils.isInternetAvailable(this)) {
             startActivity(Intent(this, No_Internet_Connection::class.java))
             overridePendingTransition(0, 0)
@@ -159,40 +166,25 @@ class home_page : AppCompatActivity() {
         }
         val uid = auth.currentUser?.uid ?: return
 
-        dbRef.child("userProjects").child(uid).get()
-            .addOnSuccessListener { assignedSnap ->
-                val ids = assignedSnap.children.mapNotNull { it.key }
-                if (ids.isEmpty()) {
-                    projectsAdapter.setProjects(emptyList())
-                    tvUpcomingCount.text = "0"
-                    return@addOnSuccessListener
-                }
-
-                val results = mutableListOf<Project>()
-                var remaining = ids.size
-
-                for (pid in ids) {
-                    dbRef.child("projects").child(pid).get()
-                        .addOnSuccessListener { pSnap ->
-                            val p = pSnap.getValue(Project::class.java)
-                            if (p != null && (p.status ?: "in_progress") == "in_progress") {
-                                results.add(p.copy(id = p.id ?: pid))
-                            }
-                        }
-                        .addOnCompleteListener {
-                            remaining--
-                            if (remaining == 0) {
-                                // Sort newest first (optional)
-                                results.sortByDescending { it.createdAt ?: 0L }
-                                projectsAdapter.setProjects(results)
-                                tvUpcomingCount.text = results.size.toString()
-                            }
-                        }
-                }
+        android.util.Log.d("HOME_PAGE", "Attaching projects listener for uid: $uid")
+        Toast.makeText(this, "DEBUG: Listening for projects of user $uid", Toast.LENGTH_SHORT).show()
+        
+        projectsListenerKey = realtimeListeners.attachProjectsListener(uid) { projects ->
+            android.util.Log.d("HOME_PAGE", "Received ${projects.size} projects from listener")
+            Toast.makeText(this, "DEBUG: Received ${projects.size} total projects", Toast.LENGTH_SHORT).show()
+            
+            val inProgressProjects = projects.filter { it.status == "in_progress" }
+            android.util.Log.d("HOME_PAGE", "After filter: ${inProgressProjects.size} in_progress projects")
+            Toast.makeText(this, "DEBUG: ${inProgressProjects.size} in_progress projects", Toast.LENGTH_SHORT).show()
+            
+            // Log each project for debugging
+            projects.forEach { p ->
+                android.util.Log.d("HOME_PAGE", "Project: id=${p.id}, name=${p.name}, status=${p.status}")
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to load projects", Toast.LENGTH_SHORT).show()
-            }
+            
+            projectsAdapter.setProjects(inProgressProjects)
+            tvUpcomingCount.text = inProgressProjects.size.toString()
+        }
     }
 
 

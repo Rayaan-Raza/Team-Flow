@@ -21,6 +21,7 @@ class add_subtask : AppCompatActivity() {
     private val auth = FirebaseAuth.getInstance()
 
     private lateinit var btnBack: ImageView
+    private lateinit var btnAddAssignee: ImageView
     private lateinit var tvSubTitle: TextView
     private lateinit var tvSubHours: TextView
     private lateinit var btnMarkComplete: Button
@@ -59,6 +60,38 @@ class add_subtask : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
         btnMarkComplete.setOnClickListener { markSubTaskCompleteForMe() }
+        
+        // Add assignee button click handler
+        btnAddAssignee.setOnClickListener {
+            val pid = projectId ?: return@setOnClickListener
+            val tid = taskId ?: return@setOnClickListener
+            val sid = subTaskId ?: return@setOnClickListener
+            
+            // Get subtask data including creator and current assignees
+            dbRef.child("taskSubTasks").child(pid).child(tid).child(sid).get()
+                .addOnSuccessListener { subSnap ->
+                    val createdBy = subSnap.child("createdBy").getValue(String::class.java)
+                        ?: auth.currentUser?.uid  // fallback to current user if no createdBy
+                    val currentUids = subSnap.child("assignees").children.mapNotNull { it.key }
+                    
+                    UserPickerDialog(this, currentUids) { selectedUsers ->
+                        // Build assignees map, always including the creator
+                        val assigneesMap = selectedUsers.associate { it.uid!! to true }.toMutableMap()
+                        
+                        // Ensure creator is always included
+                        if (createdBy != null && !assigneesMap.containsKey(createdBy)) {
+                            assigneesMap[createdBy] = true
+                        }
+                        
+                        dbRef.child("taskSubTasks").child(pid).child(tid).child(sid).child("assignees")
+                            .setValue(assigneesMap)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Assignees updated", Toast.LENGTH_SHORT).show()
+                                refresh()
+                            }
+                    }.show()
+                }
+        }
 
         refresh()
     }
@@ -70,6 +103,7 @@ class add_subtask : AppCompatActivity() {
 
     private fun bindViews() {
         btnBack = findViewById(R.id.btnBack)
+        btnAddAssignee = findViewById(R.id.btnAddAssignee)
         tvSubTitle = findViewById(R.id.tvSubTitle)
         tvSubHours = findViewById(R.id.tvSubHours)
         btnMarkComplete = findViewById(R.id.btnMarkComplete)
