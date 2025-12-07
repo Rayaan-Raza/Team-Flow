@@ -285,14 +285,82 @@ class task_detail : AppCompatActivity() {
             return
         }
 
+        // Grey out button immediately
+        btnMarkDone.isEnabled = false
+        btnMarkDone.text = "Marked"
+
         // mark MY done
         dbRef.child("projectTasks").child(pid).child(tid).child("doneBy").child(uid).setValue(true)
             .addOnSuccessListener {
+                // Send notifications to other assignees
+                sendTaskCompletionNotifications(pid, tid, uid)
                 attemptFinalizeTask(pid, tid)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun sendTaskCompletionNotifications(pid: String, tid: String, senderUid: String) {
+        // Get current user's name and task details
+        dbRef.child("users").child(senderUid).child("name").get()
+            .addOnSuccessListener { nameSnap ->
+                val senderName = nameSnap.getValue(String::class.java) ?: "Someone"
+                
+                dbRef.child("projectTasks").child(pid).child(tid).get()
+                    .addOnSuccessListener { taskSnap ->
+                        val taskTitle = taskSnap.child("title").getValue(String::class.java) ?: "a task"
+                        val collaborators = taskSnap.child("collaborators").children.mapNotNull { it.key }.toSet()
+                        
+                        // Send notification to each collaborator except sender
+                        for (recipientUid in collaborators) {
+                            if (recipientUid != senderUid) {
+                                createNotification(
+                                    recipientUid = recipientUid,
+                                    type = "task_completed",
+                                    title = "Task Progress Update",
+                                    body = "$senderName marked \"$taskTitle\" as done",
+                                    senderUid = senderUid,
+                                    senderName = senderName,
+                                    projectId = pid,
+                                    taskId = tid
+                                )
+                            }
+                        }
+                    }
+            }
+    }
+    
+    private fun createNotification(
+        recipientUid: String,
+        type: String,
+        title: String,
+        body: String,
+        senderUid: String,
+        senderName: String,
+        projectId: String,
+        taskId: String,
+        subTaskId: String? = null
+    ) {
+        val notifRef = dbRef.child("notifications").child(recipientUid).push()
+        val notifId = notifRef.key ?: return
+        
+        val notification = mapOf(
+            "id" to notifId,
+            "uid" to recipientUid,
+            "type" to type,
+            "title" to title,
+            "body" to body,
+            "senderUid" to senderUid,
+            "senderName" to senderName,
+            "projectId" to projectId,
+            "taskId" to taskId,
+            "subTaskId" to subTaskId,
+            "timestamp" to System.currentTimeMillis(),
+            "isRead" to false
+        )
+        
+        notifRef.setValue(notification)
     }
 
     private fun attemptFinalizeTask(pid: String, tid: String) {

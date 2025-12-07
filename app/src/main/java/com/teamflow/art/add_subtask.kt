@@ -212,14 +212,83 @@ class add_subtask : AppCompatActivity() {
             return
         }
 
+        // Grey out button immediately
+        btnMarkComplete.isEnabled = false
+        btnMarkComplete.text = "Marked"
+
         // mark MY click
         dbRef.child("taskSubTasks").child(pid).child(tid).child(sid).child("doneBy").child(uid).setValue(true)
             .addOnSuccessListener {
+                // Send notifications to other assignees
+                sendSubtaskCompletionNotifications(pid, tid, sid, uid)
                 attemptFinalizeSubtask(pid, tid, sid)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed", Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun sendSubtaskCompletionNotifications(pid: String, tid: String, sid: String, senderUid: String) {
+        // Get current user's name and subtask details
+        dbRef.child("users").child(senderUid).child("name").get()
+            .addOnSuccessListener { nameSnap ->
+                val senderName = nameSnap.getValue(String::class.java) ?: "Someone"
+                
+                dbRef.child("taskSubTasks").child(pid).child(tid).child(sid).get()
+                    .addOnSuccessListener { subSnap ->
+                        val subtaskTitle = subSnap.child("title").getValue(String::class.java) ?: "a subtask"
+                        val assignees = subSnap.child("assignees").children.mapNotNull { it.key }.toSet()
+                        
+                        // Send notification to each assignee except sender
+                        for (recipientUid in assignees) {
+                            if (recipientUid != senderUid) {
+                                createNotification(
+                                    recipientUid = recipientUid,
+                                    type = "subtask_completed",
+                                    title = "Subtask Progress Update",
+                                    body = "$senderName marked \"$subtaskTitle\" as done",
+                                    senderUid = senderUid,
+                                    senderName = senderName,
+                                    projectId = pid,
+                                    taskId = tid,
+                                    subTaskId = sid
+                                )
+                            }
+                        }
+                    }
+            }
+    }
+    
+    private fun createNotification(
+        recipientUid: String,
+        type: String,
+        title: String,
+        body: String,
+        senderUid: String,
+        senderName: String,
+        projectId: String,
+        taskId: String,
+        subTaskId: String? = null
+    ) {
+        val notifRef = dbRef.child("notifications").child(recipientUid).push()
+        val notifId = notifRef.key ?: return
+        
+        val notification = mapOf(
+            "id" to notifId,
+            "uid" to recipientUid,
+            "type" to type,
+            "title" to title,
+            "body" to body,
+            "senderUid" to senderUid,
+            "senderName" to senderName,
+            "projectId" to projectId,
+            "taskId" to taskId,
+            "subTaskId" to subTaskId,
+            "timestamp" to System.currentTimeMillis(),
+            "isRead" to false
+        )
+        
+        notifRef.setValue(notification)
     }
 
     private fun attemptFinalizeSubtask(pid: String, tid: String, sid: String) {

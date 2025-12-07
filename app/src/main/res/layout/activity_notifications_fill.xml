@@ -3,6 +3,7 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#FFFFFF"
+    android:id="@+id/main"
     tools:context=".notifications_fill">
 
     <!-- Top bar -->
@@ -32,143 +33,41 @@
             android:textColor="#111827" />
     </RelativeLayout>
 
-    <!-- Tabs -->
-    <RelativeLayout
-        android:id="@+id/tabs"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_below="@id/topBar"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <RelativeLayout
-                android:id="@+id/tabPending"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="8dp"
-                    android:text="All"
-                    android:textSize="14sp"
-                    android:textColor="#9CA3AF"/>
-
-                <!-- active underline -->
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/tabCompleted"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="8dp"
-                    android:text="In Review"
-                    android:textColor="#111827"
-                    android:textStyle="bold"
-
-                    android:textSize="14sp"
-                    />
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="3dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_centerHorizontal="true"
-                    android:background="@drawable/bg_tab_indicator"/>
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:id="@+id/tabAll"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="8dp"
-                    android:text="In Progress"
-                    android:textSize="14sp"
-                    android:textColor="#9CA3AF" />
-            </RelativeLayout>
-        </LinearLayout>
-    </RelativeLayout>
-
-    <!-- Scrollable list -->
-    <ScrollView
-        android:id="@+id/scroll"
+    <!-- Notifications List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvNotifications"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_below="@id/tabs"
+        android:layout_below="@id/topBar"
         android:layout_above="@+id/bottomNav"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+    
+    <!-- Empty state -->
+    <LinearLayout
+        android:id="@+id/emptyState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+        
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/no_notifications"
+            android:alpha="0.5" />
+        
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- Section: Today -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="6dp"
-                android:text="Today"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <!-- list items -->
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-
-            <!-- Section: Thursday -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="14dp"
-                android:paddingBottom="6dp"
-                android:text="Thursday"
-                android:textColor="#6B7280"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-
-            <include layout="@layout/row_task_item"/>
-            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F1F5F9"/>
-        </LinearLayout>
-    </ScrollView>
+            android:layout_marginTop="16dp"
+            android:text="No notifications yet"
+            android:textColor="#9CA3AF"
+            android:textSize="16sp" />
+    </LinearLayout>
 
     <!-- Bottom nav (fixed) -->
     <LinearLayout

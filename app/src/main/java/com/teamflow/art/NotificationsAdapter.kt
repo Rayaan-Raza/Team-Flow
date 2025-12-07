@@ -57,8 +57,8 @@ class NotificationsAdapter(
         
         // Set icon based on notification type
         when (notification.type) {
-            "task_completed" -> holder.ivAvatar.setImageResource(R.drawable.task_done)
-            "subtask_completed" -> holder.ivAvatar.setImageResource(R.drawable.task_done)
+            "task_completed" -> holder.ivAvatar.setImageResource(R.drawable.circle_check)
+            "subtask_completed" -> holder.ivAvatar.setImageResource(R.drawable.circle_check)
             else -> holder.ivAvatar.setImageResource(R.drawable.tag)
         }
         
