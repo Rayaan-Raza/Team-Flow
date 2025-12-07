@@ -44,7 +44,7 @@ class message : AppCompatActivity() {
     private var conversationId: String? = null
     private var otherUserId: String? = null
     private var otherUserName: String? = null
-    
+    // hehe
     private var selectedImageBase64: String? = null
     
     private val scope = CoroutineScope(Dispatchers.Main + Job())
