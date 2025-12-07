@@ -71,7 +71,7 @@ object BottomNavHelper {
             
             navCalendar?.setOnClickListener {
                 if (currentItem != NavItem.CALENDAR) {
-                    activity.startActivity(Intent(activity, calendar_screen::class.java))
+                    activity.startActivity(Intent(activity, home_page::class.java))
                     activity.overridePendingTransition(0, 0)
                     activity.finish()
                 }

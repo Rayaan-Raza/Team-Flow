@@ -204,7 +204,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="10dp"
-                android:src="@drawable/calendar_unselect" />
+                android:src="@drawable/logo_main" />
         </LinearLayout>
 
         <!-- Inbox -->

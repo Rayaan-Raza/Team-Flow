@@ -79,7 +79,7 @@ class home_page : AppCompatActivity() {
         navProfile = findViewById(R.id.navProfile)
 
         navCalendar.setOnClickListener { 
-            startActivity(Intent(this, calendar_screen::class.java))
+            startActivity(Intent(this, home_page::class.java))
             overridePendingTransition(0,0)
             finish()
         }
