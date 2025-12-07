@@ -45,6 +45,9 @@ class notifications_fill : AppCompatActivity() {
         bindViews()
         setupRecyclerView()
         
+        // Setup bottom navigation
+        BottomNavHelper.setupBottomNav(this, BottomNavHelper.NavItem.HOME)
+        
         btnBack.setOnClickListener { finish() }
     }
     

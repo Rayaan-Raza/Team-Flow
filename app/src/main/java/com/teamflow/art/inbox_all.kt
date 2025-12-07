@@ -2,11 +2,13 @@ package com.teamflow.art
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -21,18 +23,21 @@ class inbox_all : AppCompatActivity() {
     private val dbRef = FirebaseDatabase.getInstance().reference
     
     private lateinit var backArrow: ImageView
-    private lateinit var tabAll: TextView
-    private lateinit var tabUnread: TextView
-    private lateinit var tabRead: TextView
-    private lateinit var tabUnderlineRow: android.widget.LinearLayout
+    private lateinit var etSearch: EditText
     private lateinit var rvConversations: RecyclerView
     
     private lateinit var conversationsAdapter: ConversationsAdapter
-    private val allUsers = mutableListOf<Conversation>() // All registered users
+    
+    // Users with existing conversations (have exchanged messages)
+    private val existingChats = mutableListOf<Conversation>()
+    // All users for search
+    private val allUsers = mutableListOf<Conversation>()
+    // Currently displayed list
+    private val displayedUsers = mutableListOf<Conversation>()
+    
     private val conversationListeners = mutableMapOf<String, ChildEventListener>()
     
-    private enum class TabType { ALL, UNREAD, READ }
-    private var currentTab = TabType.ALL
+    private var isSearchActive = false
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,19 +47,16 @@ class inbox_all : AppCompatActivity() {
         
         // Initialize views
         backArrow = findViewById(R.id.backArrow)
-        tabAll = findViewById(R.id.tabAll)
-        tabUnread = findViewById(R.id.tabUnread)
-        tabRead = findViewById(R.id.tabRead)
-        tabUnderlineRow = findViewById(R.id.tabUnderlineRow)
+        etSearch = findViewById(R.id.etSearch)
         rvConversations = findViewById(R.id.rvConversations)
         
         // Back button
         backArrow.setOnClickListener { finish() }
         
-        // Setup RecyclerView for conversations
+        // Setup RecyclerView
         rvConversations.layoutManager = LinearLayoutManager(this)
         
-        conversationsAdapter = ConversationsAdapter(allUsers) { conversation ->
+        conversationsAdapter = ConversationsAdapter(displayedUsers) { conversation ->
             // Open DM chat screen
             val intent = Intent(this, message::class.java)
             intent.putExtra("conversationId", conversation.id)
@@ -65,14 +67,20 @@ class inbox_all : AppCompatActivity() {
         }
         rvConversations.adapter = conversationsAdapter
         
-        // Setup tabs
-        setupTabs()
+        // Setup search functionality
+        setupSearch()
         
         // Setup bottom navigation
         BottomNavHelper.setupBottomNav(this, BottomNavHelper.NavItem.INBOX)
         
-        // Load all users
+        // Load data
         loadAllUsers()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh existing chats when returning from message screen
+        loadExistingChats()
     }
     
     override fun onStart() {
@@ -96,107 +104,63 @@ class inbox_all : AppCompatActivity() {
         conversationListeners.clear()
     }
     
-    private fun setupTabs() {
-        tabAll.setOnClickListener {
-            switchTab(TabType.ALL)
-        }
-        
-        tabUnread.setOnClickListener {
-            switchTab(TabType.UNREAD)
-        }
-        
-        tabRead.setOnClickListener {
-            switchTab(TabType.READ)
-        }
-        
-        // Set initial tab
-        switchTab(TabType.ALL)
+    private fun setupSearch() {
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString() ?: ""
+                isSearchActive = query.isNotEmpty()
+                
+                if (isSearchActive) {
+                    // Search mode: show matching users from all users
+                    filterAllUsers(query)
+                } else {
+                    // Normal mode: show only existing chats
+                    showExistingChats()
+                }
+            }
+            
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
     
-    private fun switchTab(tab: TabType) {
-        currentTab = tab
+    private fun filterAllUsers(query: String) {
+        displayedUsers.clear()
         
-        // Reset all tabs to grey
-        tabAll.setTextColor(ContextCompat.getColor(this, R.color.textgrey))
-        tabUnread.setTextColor(ContextCompat.getColor(this, R.color.textgrey))
-        tabRead.setTextColor(ContextCompat.getColor(this, R.color.textgrey))
-        tabAll.setTypeface(null, android.graphics.Typeface.NORMAL)
-        tabUnread.setTypeface(null, android.graphics.Typeface.NORMAL)
-        tabRead.setTypeface(null, android.graphics.Typeface.NORMAL)
-        
-        // Clear underlines
-        for (i in 0 until tabUnderlineRow.childCount) {
-            tabUnderlineRow.getChildAt(i).setBackgroundColor(
-                ContextCompat.getColor(this, android.R.color.transparent)
-            )
+        val lowerQuery = query.lowercase()
+        allUsers.filterTo(displayedUsers) { user ->
+            user.otherUserName?.lowercase()?.contains(lowerQuery) == true ||
+            user.otherUserEmail?.lowercase()?.contains(lowerQuery) == true
         }
         
-        // Set selected tab to black with blue underline
-        when (tab) {
-            TabType.ALL -> {
-                tabAll.setTextColor(ContextCompat.getColor(this, android.R.color.black))
-                tabAll.setTypeface(null, android.graphics.Typeface.BOLD)
-                tabUnderlineRow.getChildAt(0).setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.bluebg)
-                )
-            }
-            TabType.UNREAD -> {
-                tabUnread.setTextColor(ContextCompat.getColor(this, android.R.color.black))
-                tabUnread.setTypeface(null, android.graphics.Typeface.BOLD)
-                tabUnderlineRow.getChildAt(1).setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.bluebg)
-                )
-            }
-            TabType.READ -> {
-                tabRead.setTextColor(ContextCompat.getColor(this, android.R.color.black))
-                tabRead.setTypeface(null, android.graphics.Typeface.BOLD)
-                tabUnderlineRow.getChildAt(2).setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.bluebg)
-                )
-            }
-        }
-        
-        // Filter conversations based on tab
-        filterConversations()
+        conversationsAdapter.updateConversations(displayedUsers)
     }
     
-    private fun filterConversations() {
-        val filtered = when (currentTab) {
-            TabType.ALL -> allUsers // Show all registered users
-            TabType.UNREAD -> allUsers.filter { it.hasUnread == true }
-            TabType.READ -> allUsers.filter { it.hasUnread == false && it.lastMessage != null }
-        }
-        conversationsAdapter.updateConversations(filtered)
+    private fun showExistingChats() {
+        displayedUsers.clear()
+        displayedUsers.addAll(existingChats)
+        conversationsAdapter.updateConversations(displayedUsers)
     }
     
     private fun loadAllUsers() {
         val currentUid = auth.currentUser?.uid ?: return
         
-        android.util.Log.d("InboxAll", "Loading users for UID: $currentUid")
-        
-        // Load all registered users
+        // Load all registered users for search
         dbRef.child("users").get()
             .addOnSuccessListener { snapshot ->
-                android.util.Log.d("InboxAll", "Firebase snapshot exists: ${snapshot.exists()}, children: ${snapshot.childrenCount}")
-                
                 allUsers.clear()
                 
                 for (userSnapshot in snapshot.children) {
                     val userId = userSnapshot.key ?: continue
                     
                     // Skip current user
-                    if (userId == currentUid) {
-                        android.util.Log.d("InboxAll", "Skipping current user: $userId")
-                        continue
-                    }
+                    if (userId == currentUid) continue
                     
                     val userName = userSnapshot.child("name").getValue(String::class.java)
                     val userEmail = userSnapshot.child("email").getValue(String::class.java)
                     val photoBase64 = userSnapshot.child("photoBase64").getValue(String::class.java)
                     
-                    android.util.Log.d("InboxAll", "Adding user: $userName ($userId)")
-                    
-                    // Create conversation object for each user
                     val conversation = Conversation(
                         id = "conv_${currentUid}_${userId}",
                         otherUserId = userId,
@@ -209,23 +173,76 @@ class inbox_all : AppCompatActivity() {
                     )
                     
                     allUsers.add(conversation)
-                    
-                    // Listen for messages with this user
-                    listenToConversation(currentUid, userId)
                 }
                 
-                android.util.Log.d("InboxAll", "Total users loaded: ${allUsers.size}")
-                
-                // Sort alphabetically by name
+                // Sort alphabetically
                 allUsers.sortBy { it.otherUserName }
                 
-                // IMPORTANT: Update the adapter to show all users
-                filterConversations()
+                // Load existing chats
+                loadExistingChats()
             }
             .addOnFailureListener { e ->
-                android.util.Log.e("InboxAll", "Failed to load users", e)
                 android.widget.Toast.makeText(this, "Failed to load users: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun loadExistingChats() {
+        val currentUid = auth.currentUser?.uid ?: return
+        
+        existingChats.clear()
+        
+        // Check each user for existing conversations
+        for (user in allUsers) {
+            val otherUserId = user.otherUserId ?: continue
+            
+            // Get conversation path
+            val convPath = if (currentUid < otherUserId) {
+                "conversations/${currentUid}_${otherUserId}"
+            } else {
+                "conversations/${otherUserId}_${currentUid}"
+            }
+            
+            // Check if conversation exists (has messages)
+            dbRef.child(convPath).limitToLast(1).get()
+                .addOnSuccessListener { snapshot ->
+                    if (snapshot.exists() && snapshot.childrenCount > 0) {
+                        // Get last message
+                        val lastMsgSnapshot = snapshot.children.first()
+                        val message = lastMsgSnapshot.getValue(MessageData::class.java)
+                        
+                        // Create conversation with last message info
+                        val chatConversation = user.copy(
+                            lastMessage = message?.messageText,
+                            lastMessageTime = message?.timestamp ?: 0,
+                            hasUnread = message?.senderUid != currentUid && message?.isRead == false
+                        )
+                        
+                        // Add to existing chats if not already present
+                        val existingIndex = existingChats.indexOfFirst { it.otherUserId == otherUserId }
+                        if (existingIndex >= 0) {
+                            existingChats[existingIndex] = chatConversation
+                        } else {
+                            existingChats.add(chatConversation)
+                        }
+                        
+                        // Sort by most recent
+                        existingChats.sortByDescending { it.lastMessageTime }
+                        
+                        // Update display if not in search mode
+                        if (!isSearchActive) {
+                            showExistingChats()
+                        }
+                        
+                        // Setup real-time listener for this conversation
+                        listenToConversation(currentUid, otherUserId)
+                    }
+                }
+        }
+        
+        // Initial display
+        if (!isSearchActive) {
+            showExistingChats()
+        }
     }
     
     private fun listenToConversation(currentUid: String, otherUserId: String) {
@@ -234,6 +251,9 @@ class inbox_all : AppCompatActivity() {
         } else {
             "conversations/${otherUserId}_${currentUid}"
         }
+        
+        // Don't add duplicate listeners
+        if (conversationListeners.containsKey(convPath)) return
         
         val listener = object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
@@ -257,20 +277,28 @@ class inbox_all : AppCompatActivity() {
         val currentUid = auth.currentUser?.uid ?: return
         val message = messageSnapshot.getValue(MessageData::class.java) ?: return
         
-        // Find conversation
-        val conversation = allUsers.find { it.otherUserId == userId } ?: return
-        val index = allUsers.indexOf(conversation)
+        // Find or create in existing chats
+        val userInfo = allUsers.find { it.otherUserId == userId } ?: return
         
-        // Update conversation with latest message
-        allUsers[index] = conversation.copy(
+        val chatConversation = userInfo.copy(
             lastMessage = message.messageText,
             lastMessageTime = message.timestamp ?: 0,
             hasUnread = message.senderUid != currentUid && message.isRead == false
         )
         
-        // Re-sort by last message time (most recent first)
-        allUsers.sortByDescending { it.lastMessageTime }
+        val existingIndex = existingChats.indexOfFirst { it.otherUserId == userId }
+        if (existingIndex >= 0) {
+            existingChats[existingIndex] = chatConversation
+        } else {
+            existingChats.add(chatConversation)
+        }
         
-        filterConversations()
+        // Sort by most recent
+        existingChats.sortByDescending { it.lastMessageTime }
+        
+        // Update display if not in search mode
+        if (!isSearchActive) {
+            showExistingChats()
+        }
     }
 }

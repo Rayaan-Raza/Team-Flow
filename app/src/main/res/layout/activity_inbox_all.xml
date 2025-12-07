@@ -36,76 +36,31 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- ===== TABS ===== -->
+    <!-- ===== SEARCH BAR ===== -->
     <LinearLayout
-        android:id="@+id/tabLayout"
+        android:id="@+id/searchContainer"
         android:layout_below="@id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:paddingHorizontal="24dp">
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp">
 
-        <TextView
-            android:id="@+id/tabAll"
+        <EditText
+            android:id="@+id/etSearch"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="All"
+            android:background="@drawable/bg_card_round"
+            android:paddingHorizontal="16dp"
+            android:hint="Search by name or email..."
+            android:textColorHint="@color/textgrey"
             android:textColor="@color/black"
-            android:textStyle="bold"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/tabUnread"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Unread"
-            android:textColor="@color/textgrey"
-            android:textSize="15sp" />
-
-        <TextView
-            android:id="@+id/tabRead"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Read"
-            android:textColor="@color/textgrey"
-            android:textSize="15sp" />
-    </LinearLayout>
-
-    <!-- ===== BLUE LINE UNDER ALL ===== -->
-    <LinearLayout
-        android:id="@+id/tabUnderlineRow"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:layout_below="@id/tabLayout"
-        android:layout_marginTop="6dp"
-        android:paddingHorizontal="24dp"
-        android:orientation="horizontal"
-        android:weightSum="3">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@color/bluebg" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@android:color/transparent" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@android:color/transparent" />
+            android:textSize="14sp"
+            android:inputType="text"
+            android:maxLines="1"
+            android:imeOptions="actionSearch" />
     </LinearLayout>
 
     <!-- ===== CONVERSATIONS LIST ===== -->
@@ -113,7 +68,7 @@
         android:id="@+id/rvConversations"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/tabUnderlineRow"
+        android:layout_below="@id/searchContainer"
         android:layout_above="@id/bottomNav"
         android:paddingHorizontal="20dp"
         android:paddingTop="10dp"
@@ -124,7 +79,7 @@
         android:id="@+id/bottomNav"
         android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:weightSum="5"
         android:background="@drawable/bg_bottom_nav_round"

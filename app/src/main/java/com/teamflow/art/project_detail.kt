@@ -12,6 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.FirebaseDatabase
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -37,11 +38,20 @@ class project_detail : AppCompatActivity() {
     private val taskItems = mutableListOf<ProjectTaskItem>()
 
     private var projectId: String? = null
+    
+    // SQLite support
+    private lateinit var syncManager: SyncManager
+    private lateinit var dbHelper: DatabaseHelper
+    private val gson = Gson()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_project_detail)
+        
+        // Initialize SQLite
+        syncManager = SyncManager(this)
+        dbHelper = DatabaseHelper(this)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -107,15 +117,52 @@ class project_detail : AppCompatActivity() {
     }
 
     private fun refreshAll() {
-        if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
-            return
-        }
         val pid = projectId ?: return
-        loadProject(pid)
-        loadTasks(pid)
-        loadMembers(pid)
+        
+        if (NetworkUtils.isInternetAvailable(this)) {
+            // Online: Load from Firebase and cache
+            loadProject(pid)
+            loadTasks(pid)
+            loadMembers(pid)
+        } else {
+            // Offline: Load from SQLite cache
+            loadProjectFromCache(pid)
+            loadTasksFromCache(pid)
+            Toast.makeText(this, "Viewing offline data", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun loadProjectFromCache(pid: String) {
+        val json = dbHelper.getByFirebaseId(DatabaseHelper.TABLE_PROJECTS, pid) ?: return
+        val p = gson.fromJson(json, Project::class.java) ?: return
+        
+        tvTitle.text = p.name ?: "Untitled project"
+        tvDesc.text = p.description ?: ""
+        
+        val due = p.dueAt
+        if (due != null) {
+            val fmt = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
+            tvDue.text = "Due date: ${fmt.format(Date(due))}"
+        } else {
+            tvDue.text = "Due date: Not set"
+        }
+    }
+    
+    private fun loadTasksFromCache(pid: String) {
+        // Get all cached tasks and filter by projectId
+        val cachedTasks = syncManager.getCachedTasks()
+        val projectTasks = cachedTasks.filter { it.projectId == pid && it.status != "done" && it.status != "completed" }
+        
+        val list = projectTasks.map { task ->
+            ProjectTaskItem(
+                id = task.id ?: "",
+                title = task.title ?: "",
+                hours = task.hours ?: 0,
+                status = task.status ?: "in_progress"
+            )
+        }
+        
+        tasksAdapter.setTasks(list)
     }
 
     private fun loadProject(pid: String) {
@@ -127,6 +174,11 @@ class project_detail : AppCompatActivity() {
                     finish()
                     return@addOnSuccessListener
                 }
+                
+                // Cache to SQLite
+                val projectWithId = p.copy(id = pid)
+                val json = gson.toJson(projectWithId)
+                dbHelper.insertOrUpdate(DatabaseHelper.TABLE_PROJECTS, pid, json, true)
 
                 tvTitle.text = p.name ?: "Untitled project"
                 tvDesc.text = p.description ?: ""
@@ -138,25 +190,12 @@ class project_detail : AppCompatActivity() {
                 } else {
                     tvDue.text = "Due date: Not set"
                 }
-                
-                // Load creator name
-                val creatorUid = p.createdBy
-                if (creatorUid != null) {
-                    dbRef.child("users").child(creatorUid).child("name").get()
-                        .addOnSuccessListener { nameSnap ->
-                            val creatorName = nameSnap.getValue(String::class.java)
-                            if (creatorName != null) {
-                                // Update any UI showing creator name if needed
-                            }
-                        }
-                }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, e.localizedMessage ?: "Failed to load project", Toast.LENGTH_SHORT).show()
             }
     }
 
-    // ✅ hides completed tasks (they "disappear" from Project Detail once done)
     private fun loadTasks(pid: String) {
         dbRef.child("projectTasks").child(pid).get()
             .addOnSuccessListener { snap ->
@@ -170,7 +209,19 @@ class project_detail : AppCompatActivity() {
                     val status = (tSnap.child("status").getValue(String::class.java) ?: "in_progress").trim()
                     val sLower = status.lowercase()
                     val isDone = (sLower == "done" || sLower == "completed")
-                    if (isDone) continue  // ✅ remove from UI
+                    
+                    // Cache task to SQLite
+                    val task = Task(
+                        id = id,
+                        projectId = pid,
+                        title = title,
+                        status = status,
+                        hours = (tSnap.child("hours").value as? Long)?.toInt() ?: 0
+                    )
+                    val taskJson = gson.toJson(task)
+                    dbHelper.insertOrUpdate(DatabaseHelper.TABLE_TASKS, id, taskJson, true)
+                    
+                    if (isDone) continue
 
                     val hoursAny = tSnap.child("hours").value
                     val hours = when (hoursAny) {

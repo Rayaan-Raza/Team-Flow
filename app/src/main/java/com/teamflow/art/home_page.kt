@@ -32,12 +32,16 @@ class home_page : AppCompatActivity() {
     private val projectList = mutableListOf<Project>()
     private val realtimeListeners = RealtimeListeners()
     private var projectsListenerKey: String? = null
+    
+    // SQLite sync manager
+    private lateinit var syncManager: SyncManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home_page)
 
         auth = FirebaseAuth.getInstance()
+        syncManager = SyncManager(this)
 
         tvHello = findViewById(R.id.tvHello)
         tvUpcomingCount = findViewById(R.id.tvUpcomingCount)
@@ -111,7 +115,7 @@ class home_page : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        startProjectsListener()
+        loadProjects()
     }
 
     override fun onPause() {
@@ -123,7 +127,6 @@ class home_page : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         val currentUser = auth.currentUser
-        startProjectsListener()
         if (currentUser == null) {
             startActivity(Intent(this, Sign_in::class.java))
             overridePendingTransition(0, 0)
@@ -135,57 +138,64 @@ class home_page : AppCompatActivity() {
         val userName = UserSession.getName(this)
         tvHello.text = if (!userName.isNullOrEmpty()) "Hi, $userName" else "Hi,"
         
-        // Load user name from Firebase if not in session
-        if (userName.isNullOrEmpty()) {
+        // Load user name from Firebase if not in session and online
+        if (userName.isNullOrEmpty() && NetworkUtils.isInternetAvailable(this)) {
             loadUserName()
         }
     }
 
     private fun loadUserName() {
-        if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
-            return
-        }
         val uid = auth.currentUser?.uid ?: return
         dbRef.child("users").child(uid).get()
             .addOnSuccessListener { snap ->
                 val name = snap.child("name").getValue(String::class.java)
                 tvHello.text = if (!name.isNullOrEmpty()) "Hi, $name" else "Hi,"
+                // Save to session for offline access
+                if (!name.isNullOrEmpty()) {
+                    UserSession.saveName(this, name)
+                }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed to load user info", Toast.LENGTH_SHORT).show()
+                // Silently fail - name already loaded from session if available
             }
     }
 
-    private fun startProjectsListener() {
-        if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
-            return
-        }
+    private fun loadProjects() {
         val uid = auth.currentUser?.uid ?: return
-
-        android.util.Log.d("HOME_PAGE", "Attaching projects listener for uid: $uid")
-        Toast.makeText(this, "DEBUG: Listening for projects of user $uid", Toast.LENGTH_SHORT).show()
         
+        if (NetworkUtils.isInternetAvailable(this)) {
+            // Online: Load from Firebase and cache to SQLite
+            loadProjectsFromFirebase(uid)
+        } else {
+            // Offline: Load from SQLite cache
+            loadProjectsFromCache()
+        }
+    }
+    
+    private fun loadProjectsFromFirebase(uid: String) {
         projectsListenerKey = realtimeListeners.attachProjectsListener(uid) { projects ->
-            android.util.Log.d("HOME_PAGE", "Received ${projects.size} projects from listener")
-            Toast.makeText(this, "DEBUG: Received ${projects.size} total projects", Toast.LENGTH_SHORT).show()
-            
             val inProgressProjects = projects.filter { it.status == "in_progress" }
-            android.util.Log.d("HOME_PAGE", "After filter: ${inProgressProjects.size} in_progress projects")
-            Toast.makeText(this, "DEBUG: ${inProgressProjects.size} in_progress projects", Toast.LENGTH_SHORT).show()
             
-            // Log each project for debugging
-            projects.forEach { p ->
-                android.util.Log.d("HOME_PAGE", "Project: id=${p.id}, name=${p.name}, status=${p.status}")
-            }
+            // Cache all projects to SQLite for offline access
+            syncManager.cacheProjects(projects)
             
+            // Update UI
             projectsAdapter.setProjects(inProgressProjects)
             tvUpcomingCount.text = inProgressProjects.size.toString()
         }
     }
-
-
+    
+    private fun loadProjectsFromCache() {
+        // Load from SQLite
+        val cachedProjects = syncManager.getCachedProjects()
+        val inProgressProjects = cachedProjects.filter { it.status == "in_progress" }
+        
+        if (cachedProjects.isNotEmpty()) {
+            projectsAdapter.setProjects(inProgressProjects)
+            tvUpcomingCount.text = inProgressProjects.size.toString()
+            Toast.makeText(this, "Loaded ${inProgressProjects.size} projects offline", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "No offline data available", Toast.LENGTH_SHORT).show()
+        }
+    }
 }
