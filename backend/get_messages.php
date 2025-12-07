@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 require_once 'api_config.php';
 
 /**
@@ -21,13 +21,15 @@ if (empty($conversation_id)) {
 $conn = getDbConnection();
 
 try {
-    // Get messages
+    // Get messages including receiver_uid and image_base64
     $stmt = $conn->prepare("
         SELECT 
             m.message_id,
             m.conversation_id,
             m.sender_uid,
+            m.receiver_uid,
             m.message_text,
+            m.image_base64,
             m.timestamp,
             m.is_read,
             u.name as sender_name,
@@ -38,27 +40,29 @@ try {
         ORDER BY m.timestamp ASC
         LIMIT ? OFFSET ?
     ");
-    
+
     $stmt->bind_param("sii", $conversation_id, $limit, $offset);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $messages = [];
     while ($row = $result->fetch_assoc()) {
         $messages[] = [
             'message_id' => $row['message_id'],
             'conversation_id' => $row['conversation_id'],
             'sender_uid' => $row['sender_uid'],
+            'receiver_uid' => $row['receiver_uid'],
             'sender_name' => $row['sender_name'],
             'sender_email' => $row['sender_email'],
             'message_text' => $row['message_text'],
+            'image_base64' => $row['image_base64'],
             'timestamp' => intval($row['timestamp']),
             'is_read' => boolval($row['is_read'])
         ];
     }
-    
+
     $stmt->close();
-    
+
     // Get total count
     $stmt = $conn->prepare("SELECT COUNT(*) as total FROM messages WHERE conversation_id = ?");
     $stmt->bind_param("s", $conversation_id);
@@ -66,17 +70,17 @@ try {
     $result = $stmt->get_result();
     $total = $result->fetch_assoc()['total'];
     $stmt->close();
-    
+
     sendResponse(true, [
         'messages' => $messages,
         'total' => intval($total),
         'limit' => $limit,
         'offset' => $offset
     ]);
-    
+
 } catch (Exception $e) {
     sendResponse(false, null, $e->getMessage(), 500);
 } finally {
     $conn->close();
 }
-?&gt;
+?>

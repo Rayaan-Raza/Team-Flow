@@ -7,12 +7,15 @@ data class Task(
     val title: String? = null,
     val description: String? = null,
     val isCompleted: Boolean? = false,
+    val status: String? = "in_progress",  // "in_progress", "done", "completed"
     val priority: String? = null,  // "low", "medium", "high"
     val dueDate: String? = null,
+    val dueAt: Long? = null,  // Timestamp for due date
     val assigneeUid: String? = null,
     
     // Time duration in hours
     val durationHours: Int? = null,
+    val hours: Int? = null,  // Alternative hours field
 
     val createdAt: Long? = null,
     val updatedAt: Long? = null,

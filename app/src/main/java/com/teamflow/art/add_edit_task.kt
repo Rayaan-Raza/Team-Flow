@@ -146,8 +146,7 @@ class add_edit_task : AppCompatActivity() {
 
     private fun loadMembers(pid: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         dbRef.child("projectMembers").child(pid).get()
@@ -184,8 +183,7 @@ class add_edit_task : AppCompatActivity() {
 
     private fun loadTaskForEdit(pid: String, tid: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         dbRef.child("projectTasks").child(pid).child(tid).get()
@@ -230,8 +228,7 @@ class add_edit_task : AppCompatActivity() {
 
     private fun createTask(pid: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to create task", Toast.LENGTH_SHORT).show()
             return
         }
         val uid = currentUid ?: run {
@@ -299,8 +296,7 @@ class add_edit_task : AppCompatActivity() {
 
     private fun updateTask(pid: String, tid: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to update task", Toast.LENGTH_SHORT).show()
             return
         }
         val uid = currentUid ?: ""

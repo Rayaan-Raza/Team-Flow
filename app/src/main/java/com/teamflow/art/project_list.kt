@@ -22,6 +22,9 @@ class project_list : AppCompatActivity() {
     private lateinit var projectsAdapter: ProjectsAdapter
     private val projectList = mutableListOf<Project>()
     
+    // SQLite support
+    private lateinit var syncManager: SyncManager
+    
     // Bottom navigation
     private lateinit var navHome: LinearLayout
     private lateinit var navProjects: LinearLayout
@@ -34,6 +37,7 @@ class project_list : AppCompatActivity() {
         setContentView(R.layout.activity_home_page)  // Reusing home page layout
         
         auth = FirebaseAuth.getInstance()
+        syncManager = SyncManager(this)
         
         rvProjects = findViewById(R.id.rvTasks)
         tvEmptyState = findViewById(R.id.tvUpcomingCount)
@@ -75,17 +79,38 @@ class project_list : AppCompatActivity() {
             return
         }
         
-        // Attach real-time listener for projects
-        val uid = currentUser.uid
-        realtimeListeners.attachProjectsListener(uid) { projects ->
+        loadProjects(currentUser.uid)
+    }
+    
+    private fun loadProjects(uid: String) {
+        if (NetworkUtils.isInternetAvailable(this)) {
+            // Online: load from Firebase and cache
+            realtimeListeners.attachProjectsListener(uid) { projects ->
+                projectList.clear()
+                projectList.addAll(projects)
+                projectsAdapter.notifyDataSetChanged()
+                
+                // Cache to SQLite
+                syncManager.cacheProjects(projects)
+                
+                if (projects.isEmpty()) {
+                    tvEmptyState.text = "No projects yet"
+                } else {
+                    tvEmptyState.text = "${projects.size} Projects"
+                }
+            }
+        } else {
+            // Offline: load from cache
+            val cachedProjects = syncManager.getCachedProjects()
             projectList.clear()
-            projectList.addAll(projects)
+            projectList.addAll(cachedProjects)
             projectsAdapter.notifyDataSetChanged()
             
-            if (projects.isEmpty()) {
-                tvEmptyState.text = "No projects yet"
+            if (cachedProjects.isEmpty()) {
+                tvEmptyState.text = "No offline data"
             } else {
-                tvEmptyState.text = "${projects.size} Projects"
+                tvEmptyState.text = "${cachedProjects.size} Projects (offline)"
+                Toast.makeText(this, "Loaded ${cachedProjects.size} projects offline", Toast.LENGTH_SHORT).show()
             }
         }
     }

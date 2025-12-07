@@ -7,10 +7,12 @@ data class SubTask(
 
     val title: String? = null,
     val isCompleted: Boolean? = false,
+    val status: String? = "in_progress",  // "in_progress", "done", "completed"
     val assigneeUid: String? = null,
     
     // Time duration in hours
     val durationHours: Int? = null,
+    val hours: Int? = null,  // Alternative hours field
 
     val createdAt: Long? = null,
     val updatedAt: Long? = null,

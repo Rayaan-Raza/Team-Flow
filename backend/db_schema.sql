@@ -35,13 +35,16 @@ CREATE TABLE IF NOT EXISTS messages (
     message_id VARCHAR(255) UNIQUE NOT NULL,
     conversation_id VARCHAR(255) NOT NULL,
     sender_uid VARCHAR(255) NOT NULL,
-    message_text TEXT NOT NULL,
+    receiver_uid VARCHAR(255) NOT NULL,
+    message_text TEXT,
+    image_base64 LONGTEXT,
     timestamp BIGINT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_message_id (message_id),
     INDEX idx_conversation_id (conversation_id),
     INDEX idx_sender_uid (sender_uid),
+    INDEX idx_receiver_uid (receiver_uid),
     INDEX idx_timestamp (timestamp),
     FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

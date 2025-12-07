@@ -73,8 +73,7 @@ class set_new_password : AppCompatActivity() {
         }
 
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to update password", Toast.LENGTH_SHORT).show()
             return
         }
 

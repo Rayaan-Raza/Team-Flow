@@ -50,8 +50,7 @@ class Create_account : AppCompatActivity() {
 
     private fun registerUser() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0,0)
+            Toast.makeText(this, "Network required to create account", Toast.LENGTH_SHORT).show()
             return
         }
         val name = etName.text.toString().trim()

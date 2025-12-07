@@ -118,8 +118,7 @@ class add_subtask : AppCompatActivity() {
 
     private fun refresh() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         val pid = projectId ?: return
@@ -200,8 +199,7 @@ class add_subtask : AppCompatActivity() {
 
     private fun markSubTaskCompleteForMe() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to mark complete", Toast.LENGTH_SHORT).show()
             return
         }
         val pid = projectId ?: return

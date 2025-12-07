@@ -162,7 +162,8 @@ class inbox_all : AppCompatActivity() {
                     val photoBase64 = userSnapshot.child("photoBase64").getValue(String::class.java)
                     
                     val conversation = Conversation(
-                        id = "conv_${currentUid}_${userId}",
+                        // Sort UIDs alphabetically to ensure both users get same conversation_id
+                        id = if (currentUid < userId) "conv_${currentUid}_${userId}" else "conv_${userId}_${currentUid}",
                         otherUserId = userId,
                         otherUserName = userName,
                         otherUserEmail = userEmail,

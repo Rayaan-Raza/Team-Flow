@@ -169,8 +169,7 @@ class settings_app : AppCompatActivity() {
 
         // Save to Firebase
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         val uid = auth.currentUser?.uid ?: return

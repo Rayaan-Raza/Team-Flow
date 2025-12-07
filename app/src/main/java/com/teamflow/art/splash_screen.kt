@@ -31,7 +31,13 @@ class splash_screen : AppCompatActivity() {
         when {
             // Case 1: User is logged in
             currentUser != null -> {
-                loadUserDataAndNavigateHome(currentUser.uid)
+                // Check if online - if not, skip Firebase fetch and use cached session
+                if (NetworkUtils.isInternetAvailable(this)) {
+                    loadUserDataAndNavigateHome(currentUser.uid)
+                } else {
+                    // Offline: Use cached session data and go to home
+                    navigateToHome()
+                }
             }
             // Case 2: Account exists on device but not logged in
             UserSession.hasAccount(this) -> {

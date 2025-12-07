@@ -95,8 +95,7 @@ class settings_privacy : AppCompatActivity() {
 
     private fun clearData() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         val uid = auth.currentUser?.uid ?: return
@@ -137,8 +136,7 @@ class settings_privacy : AppCompatActivity() {
 
     private fun saveSetting(key: String, value: Boolean) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         val uid = auth.currentUser?.uid ?: return

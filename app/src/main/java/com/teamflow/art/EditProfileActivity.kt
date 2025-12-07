@@ -44,8 +44,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun loadUserData() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         val user = auth.currentUser
@@ -81,8 +80,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private fun saveUserData() {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(android.content.Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to save", Toast.LENGTH_SHORT).show()
             return
         }
         val name = etName.text.toString().trim()

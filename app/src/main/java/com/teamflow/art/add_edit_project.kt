@@ -159,11 +159,6 @@ class add_edit_project : AppCompatActivity() {
 
     // ---------- CREATE ----------
     private fun createProject(creatorUid: String) {
-        if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
-            return
-        }
         val name = etTitle.text.toString().trim()
         val desc = etDesc.text.toString().trim()
 
@@ -188,9 +183,16 @@ class add_edit_project : AppCompatActivity() {
         }
 
         val now = System.currentTimeMillis()
-        val projectId = dbRef.child("projects").push().key ?: run {
-            Toast.makeText(this, "Failed to generate project id", Toast.LENGTH_SHORT).show()
-            return
+        
+        // Generate local ID if offline, Firebase ID if online
+        val isOnline = NetworkUtils.isInternetAvailable(this)
+        val projectId = if (isOnline) {
+            dbRef.child("projects").push().key ?: run {
+                Toast.makeText(this, "Failed to generate project id", Toast.LENGTH_SHORT).show()
+                return
+            }
+        } else {
+            "local_${System.currentTimeMillis()}_${(1000..9999).random()}"
         }
 
         val project = Project(
@@ -206,12 +208,21 @@ class add_edit_project : AppCompatActivity() {
             tasksDone = 0
         )
 
+        if (isOnline) {
+            // Online: Save directly to Firebase
+            saveProjectToFirebase(project, creatorUid, tasks)
+        } else {
+            // Offline: Save locally and queue for sync
+            saveProjectLocally(project, creatorUid, tasks)
+        }
+    }
+    
+    private fun saveProjectToFirebase(project: Project, creatorUid: String, tasks: List<TaskDraft>) {
+        val projectId = project.id ?: return
+        val now = System.currentTimeMillis()
+        
         val updates = hashMapOf<String, Any?>()
         updates["projects/$projectId"] = project
-        
-        // DEBUG: Log assignees list
-        android.util.Log.d("CREATE_PROJECT", "Assignees count: ${assignees.size}")
-        assignees.forEach { a -> android.util.Log.d("CREATE_PROJECT", "Assignee UID: ${a.uid}") }
         
         // Always add creator first
         updates["userProjects/$creatorUid/$projectId"] = true
@@ -220,11 +231,9 @@ class add_edit_project : AppCompatActivity() {
         // Add other assignees (skip creator since already added)
         for (a in assignees) {
             val memberUid = a.uid ?: continue
-            android.util.Log.d("CREATE_PROJECT", "Processing assignee: $memberUid (is creator: ${memberUid == creatorUid})")
             if (memberUid != creatorUid) {
                 updates["userProjects/$memberUid/$projectId"] = true
                 updates["projectMembers/$projectId/$memberUid/role"] = "member"
-                android.util.Log.d("CREATE_PROJECT", "Added member to project: $memberUid")
             }
         }
 
@@ -239,34 +248,62 @@ class add_edit_project : AppCompatActivity() {
                 "createdBy" to creatorUid,
                 "createdAt" to now,
                 "updatedAt" to now,
-                "collaborators" to mapOf(creatorUid to true)  // Include collaborators in the map
+                "collaborators" to mapOf(creatorUid to true)
             )
         }
-
-        // DEBUG: Log what we're sending
-        Toast.makeText(this, "DEBUG: Saving project $projectId for user $creatorUid", Toast.LENGTH_LONG).show()
-        android.util.Log.d("CREATE_PROJECT", "Updates map keys: ${updates.keys}")
-        android.util.Log.d("CREATE_PROJECT", "Project status: ${project.status}")
-        android.util.Log.d("CREATE_PROJECT", "userProjects path: userProjects/$creatorUid/$projectId")
         
         dbRef.updateChildren(updates)
             .addOnSuccessListener {
-                Toast.makeText(this, "DEBUG: Project saved to Firebase successfully! ID: $projectId", Toast.LENGTH_LONG).show()
-                android.util.Log.d("CREATE_PROJECT", "SUCCESS - Project created: $projectId")
+                // Also cache locally
+                val syncManager = SyncManager(this)
+                syncManager.cacheProjects(listOf(project))
+                
+                Toast.makeText(this, "Project created", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this, home_page::class.java))
                 finish()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "DEBUG FAILURE: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                android.util.Log.e("CREATE_PROJECT", "FAILED: ${e.message}", e)
+                Toast.makeText(this, "Failed: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
+    }
+    
+    private fun saveProjectLocally(project: Project, creatorUid: String, tasks: List<TaskDraft>) {
+        val dbHelper = DatabaseHelper(this)
+        val gson = com.google.gson.Gson()
+        val projectId = project.id ?: return
+        
+        // Save project to local cache (not synced yet)
+        val projectJson = gson.toJson(project)
+        dbHelper.insertOrUpdate(DatabaseHelper.TABLE_PROJECTS, projectId, projectJson, false)
+        
+        // Add pending operation for sync
+        dbHelper.addPendingOperation("create", "project", projectId, projectJson)
+        
+        // Save tasks locally too
+        val now = System.currentTimeMillis()
+        for (t in tasks) {
+            val taskId = "local_task_${System.currentTimeMillis()}_${(1000..9999).random()}"
+            val task = Task(
+                id = taskId,
+                projectId = projectId,
+                title = t.title,
+                hours = t.hours,
+                status = "in_progress"
+            )
+            val taskJson = gson.toJson(task)
+            dbHelper.insertOrUpdate(DatabaseHelper.TABLE_TASKS, taskId, taskJson, false)
+            dbHelper.addPendingOperation("create", "task", taskId, taskJson)
+        }
+        
+        Toast.makeText(this, "Project saved offline - will sync when online", Toast.LENGTH_LONG).show()
+        startActivity(Intent(this, home_page::class.java))
+        finish()
     }
 
     // ---------- LOAD FOR EDIT ----------
     private fun loadProjectForEdit(projectId: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required", Toast.LENGTH_SHORT).show()
             return
         }
         // load main project
@@ -344,8 +381,7 @@ class add_edit_project : AppCompatActivity() {
     // ---------- UPDATE ----------
     private fun updateProject(projectId: String, editorUid: String) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to update project", Toast.LENGTH_SHORT).show()
             return
         }
         val name = etTitle.text.toString().trim()

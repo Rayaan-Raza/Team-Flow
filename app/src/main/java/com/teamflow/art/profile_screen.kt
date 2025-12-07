@@ -112,8 +112,7 @@ class profile_screen : AppCompatActivity() {
 
     private fun handleImageSelection(uri: android.net.Uri) {
         if (!NetworkUtils.isInternetAvailable(this)) {
-            startActivity(Intent(this, No_Internet_Connection::class.java))
-            overridePendingTransition(0, 0)
+            Toast.makeText(this, "Network required to upload image", Toast.LENGTH_SHORT).show()
             return
         }
 

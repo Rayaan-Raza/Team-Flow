@@ -42,6 +42,9 @@ class home_page : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         syncManager = SyncManager(this)
+        
+        // Start network monitoring for offline/online toasts
+        NetworkUtils.startNetworkMonitoring(this)
 
         tvHello = findViewById(R.id.tvHello)
         tvUpcomingCount = findViewById(R.id.tvUpcomingCount)
@@ -150,10 +153,6 @@ class home_page : AppCompatActivity() {
             .addOnSuccessListener { snap ->
                 val name = snap.child("name").getValue(String::class.java)
                 tvHello.text = if (!name.isNullOrEmpty()) "Hi, $name" else "Hi,"
-                // Save to session for offline access
-                if (!name.isNullOrEmpty()) {
-                    UserSession.saveName(this, name)
-                }
             }
             .addOnFailureListener {
                 // Silently fail - name already loaded from session if available
