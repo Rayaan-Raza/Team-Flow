@@ -39,7 +39,7 @@ object BottomNavHelper {
             // Set all icons to grey first (if they exist)
             iconHome?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray))
             iconProjects?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray))
-            iconCalendar?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray))
+            // iconCalendar?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray)) // Don't tint the logo
             iconInbox?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray))
             iconProfile?.setColorFilter(ContextCompat.getColor(activity, android.R.color.darker_gray))
             
@@ -47,7 +47,7 @@ object BottomNavHelper {
             when (currentItem) {
                 NavItem.HOME -> iconHome?.setColorFilter(ContextCompat.getColor(activity, android.R.color.black))
                 NavItem.PROJECTS -> iconProjects?.setColorFilter(ContextCompat.getColor(activity, android.R.color.black))
-                NavItem.CALENDAR -> iconCalendar?.setColorFilter(ContextCompat.getColor(activity, android.R.color.black))
+                NavItem.CALENDAR -> { /* Do nothing, keep original logo color */ }
                 NavItem.INBOX -> iconInbox?.setColorFilter(ContextCompat.getColor(activity, android.R.color.black))
                 NavItem.PROFILE -> iconProfile?.setColorFilter(ContextCompat.getColor(activity, android.R.color.black))
             }
